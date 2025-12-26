@@ -196,7 +196,7 @@ class PromptManager {
         return `
             <div class="prompt-card" data-id="${prompt.id}">
                 <div class="card-header">
-                    <span class="app-badge ${prompt.app}">${this.getAppEmoji(prompt.app)} ${this.getAppName(prompt.app)}</span>
+                    <span class="app-badge ${prompt.app}">${this.getAppName(prompt.app)}</span>
                     <button class="favorite-btn ${prompt.isFavorite ? 'favorited' : ''}" data-action="toggle-favorite" title="${prompt.isFavorite ? '取消收藏' : '收藏'}">
                         ${prompt.isFavorite ? '⭐' : '☆'}
                     </button>
@@ -414,20 +414,35 @@ class PromptManager {
     getAppName(appKey) {
         const appNames = {
             'deepseek': 'DeepSeek',
-            'gemini': 'Gemini',
             'chatgpt': 'ChatGPT',
+            'gemini': 'Gemini',
+            'grok': 'Grok',
             'claude': 'Claude',
-            'other': '其他'
+            'other': '其他应用'
         };
         return appNames[appKey] || appKey;
     }
 
-    // Get app emoji
+    // Get app logo path
+    getAppLogo(appKey) {
+        const logos = {
+            'deepseek': 'icons/deepseek.png',
+            'chatgpt': 'icons/chatgpt.png',
+            'gemini': 'icons/gemini.png',
+            'grok': 'icons/grok.png',
+            'claude': 'icons/claude.png',
+            'other': 'icons/otherAI.png'
+        };
+        return logos[appKey] || '';
+    }
+
+    // Get app emoji (for backward compatibility)
     getAppEmoji(appKey) {
         const emojis = {
             'deepseek': '🤖',
-            'gemini': '⭐',
             'chatgpt': '💬',
+            'gemini': '⭐',
+            'grok': '🚀',
             'claude': '🌐',
             'other': '📝'
         };

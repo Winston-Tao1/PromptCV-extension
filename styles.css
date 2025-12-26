@@ -217,15 +217,15 @@ body {
     font-size: 15px;
 }
 
-/* Content Area - Adjusted height for 510px total */
+/* Content Area - Only remove bottom white area */
 .content {
     padding: 16px;
-    height: 330px;
-    max-height: 330px;
+    height: 350px;
+    max-height: 350px;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: white;
-    margin: 0 4px 4px 4px;
+    margin: 0 4px 0 4px;
 }
 
 /* Tab content - Removed transform animation to prevent shaking */
@@ -247,7 +247,7 @@ body {
     }
 }
 
-/* Prompt Cards - Removed transform on hover */
+/* Prompt Cards - Normal spacing */
 .prompt-card {
     background: white;
     border: 1px solid #DADCE0;
@@ -275,41 +275,51 @@ body {
     margin-bottom: 10px;
 }
 
+/* App badge with logo */
 .app-badge {
-    background-color: #E8F0FE;
-    color: var(--google-blue);
+    background-color: #F8F9FA;
+    color: var(--google-text);
     font-size: 11px;
     font-weight: 500;
-    padding: 3px 10px;
+    padding: 4px 8px 4px 24px;
     border-radius: 14px;
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    position: relative;
+    background-size: 14px 14px;
+    background-repeat: no-repeat;
+    background-position: 6px center;
 }
 
 .app-badge.deepseek {
     background-color: #F3E5F5;
-    color: #7B1FA2;
+    background-image: url('icons/deepseek.png');
+}
+
+.app-badge.chatgpt {
+    background-color: #E8F0FE;
+    background-image: url('icons/chatgpt.png');
 }
 
 .app-badge.gemini {
     background-color: #FFF3E0;
-    color: #E65100;
+    background-image: url('icons/gemini.png');
 }
 
-.app-badge.chatgpt {
-    background-color: #E0F2F1;
-    color: #00695C;
+.app-badge.grok {
+    background-color: #E3F2FD;
+    background-image: url('icons/grok.png');
 }
 
 .app-badge.claude {
     background-color: #FBE9E7;
-    color: #D84315;
+    background-image: url('icons/claude.png');
 }
 
 .app-badge.other {
     background-color: var(--google-gray);
-    color: var(--google-dark-gray);
+    background-image: url('icons/otherAI.png');
 }
 
 /* Fixed favorite button - consistent position */
@@ -418,6 +428,48 @@ body {
     font-family: inherit;
     transition: all var(--transition-fast);
     background-color: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235F6368' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
+
+/* Custom select with logos */
+.form-control option {
+    padding: 8px 8px 8px 32px;
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: 8px center;
+}
+
+.form-control option[value="deepseek"] {
+    background-image: url('icons/deepseek.png');
+}
+
+.form-control option[value="chatgpt"] {
+    background-image: url('icons/chatgpt.png');
+}
+
+.form-control option[value="gemini"] {
+    background-image: url('icons/gemini.png');
+}
+
+.form-control option[value="grok"] {
+    background-image: url('icons/grok.png');
+}
+
+.form-control option[value="claude"] {
+    background-image: url('icons/claude.png');
+}
+
+.form-control option[value="other"] {
+    background-image: url('icons/otherAI.png');
+}
+
+.form-control option[value=""] {
+    background-image: none;
+    padding-left: 8px;
 }
 
 .form-control:hover {
@@ -441,7 +493,7 @@ textarea.form-control {
     line-height: 1.5;
 }
 
-/* Save button - Removed transform animation */
+/* Save button */
 .save-btn {
     background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 100%);
     color: white;
@@ -523,7 +575,7 @@ textarea.form-control {
     font-size: 18px;
 }
 
-/* Scrollbar - Fixed width to prevent layout shift */
+/* Scrollbar */
 .content::-webkit-scrollbar {
     width: 6px;
 }
