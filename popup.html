@@ -9,14 +9,12 @@
 <body>
     <!-- Google Rainbow Border -->
     <div class="rainbow-border"></div>
-    <div class="rainbow-border-right"></div>
-    <div class="rainbow-border-bottom"></div>
     
     <!-- Header -->
     <div class="header">
         <div class="header-title">
             <span class="header-icon"></span>
-            <h1>PromptCV</h1>
+            <h1 id="app-title" class="editable-title" title="点击编辑">PromptCV</h1>
         </div>
         <div class="header-subtitle">专业AI提示词管理工具</div>
     </div>
@@ -79,10 +77,10 @@
                 <div class="form-group">
                     <label class="form-label">
                         <span>🖥️</span>
-                        <span>目标应用</span>
+                        <span>标签</span>
                     </label>
                     <select class="form-control" id="app-select" required>
-                        <option value="">请选择使用的AI应用...</option>
+                        <option value="">请选择提示词对应标签</option>
                         <option value="deepseek" data-logo="icons/deepseek.png">DeepSeek</option>
                         <option value="chatgpt" data-logo="icons/chatgpt.png">ChatGPT</option>
                         <option value="gemini" data-logo="icons/gemini.png">Gemini</option>
@@ -105,8 +103,8 @@
                 </div>
                 
                 <button type="button" class="save-btn" id="save-btn">
-                    <span>💾</span>
-                    <span>保存并复制</span>
+                    <img src="icons/add.png" class="save-btn-icon" alt="保存">
+                    <span>保存</span>
                 </button>
             </form>
         </div>

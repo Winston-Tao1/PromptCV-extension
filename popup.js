@@ -16,6 +16,7 @@ class PromptManager {
     async init() {
         await this.loadData();
         this.initEventListeners();
+        this.initEditableTitle();
         this.renderAllTabs();
     }
 
@@ -28,7 +29,7 @@ class PromptManager {
             this.settings = result.settings || this.settings;
         } catch (error) {
             console.error('Failed to load data:', error);
-            this.showToast('⚠️ 数据加载失败', 'error');
+            this.showToast('数据加载失败');
         }
     }
 
@@ -50,7 +51,7 @@ class PromptManager {
             });
         } catch (error) {
             console.error('Failed to save data:', error);
-            this.showToast('⚠️ 保存失败', 'error');
+            this.showToast('保存失败');
         }
     }
 
@@ -190,7 +191,6 @@ class PromptManager {
             ? prompt.content.substring(0, 120) + '...' 
             : prompt.content;
         
-        const escapedContent = this.escapeHtml(prompt.content);
         const escapedPreview = this.escapeHtml(preview);
         
         return `
@@ -200,7 +200,7 @@ class PromptManager {
                     <button class="favorite-btn ${prompt.isFavorite ? 'favorited' : ''}" data-action="toggle-favorite" title="${prompt.isFavorite ? '取消收藏' : '收藏'}">
                     </button>
                 </div>
-                <div class="prompt-preview" title="${escapedContent}">
+                <div class="prompt-preview">
                     ${escapedPreview}
                 </div>
                 <div class="card-footer">
@@ -219,12 +219,12 @@ class PromptManager {
         const promptContent = document.getElementById('prompt-content');
         
         if (!appSelect.value) {
-            this.showToast('⚠️ 请选择应用', 'warning');
+            this.showToast('请选择应用');
             return;
         }
         
         if (!promptContent.value.trim()) {
-            this.showToast('⚠️ 请输入提示词内容', 'warning');
+            this.showToast('请输入提示词内容');
             return;
         }
         
@@ -256,7 +256,7 @@ class PromptManager {
         // Switch to all tab to show the new prompt
         this.switchTab('all');
         
-        this.showToast('✅ 提示词已保存并复制', 'success');
+        this.showToast('提示词已保存并复制');
     }
 
     // Copy to clipboard
@@ -270,7 +270,7 @@ class PromptManager {
             return true;
         } catch (error) {
             console.error('Copy failed:', error);
-            this.showToast('⚠️ 复制失败', 'error');
+            this.showToast('复制失败');
             return false;
         }
     }
@@ -298,7 +298,7 @@ class PromptManager {
         }
     }
 
-    // Toggle favorite status - FIXED VERSION
+    // Toggle favorite status
     async toggleFavorite(promptId) {
         const promptIndex = this.prompts.findIndex(p => p.id === promptId);
         if (promptIndex !== -1) {
@@ -314,13 +314,10 @@ class PromptManager {
             if (historyTab && historyTab.classList.contains('active')) {
                 this.renderHistory();
             }
-            
-            const action = this.prompts[promptIndex].isFavorite ? '已收藏' : '已取消收藏';
-            this.showToast(`⭐ ${action}`, 'success');
         }
     }
 
-    // Attach event listeners to cards - FIXED VERSION
+    // Attach event listeners to cards
     attachCardListeners() {
         // Copy buttons
         document.querySelectorAll('.copy-btn').forEach(btn => {
@@ -333,13 +330,13 @@ class PromptManager {
                 if (prompt) {
                     const success = await this.copyToClipboard(prompt.content, promptId);
                     if (success) {
-                        this.showToast('✅ 已复制到剪贴板', 'success');
+                        this.showToast('复制成功');
                     }
                 }
             });
         });
         
-        // Favorite buttons - FIXED: Ensure proper event handling
+        // Favorite buttons
         document.querySelectorAll('.favorite-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -347,16 +344,15 @@ class PromptManager {
                 const promptId = card.getAttribute('data-id');
                 
                 // Update UI immediately for better UX
-                const currentFavorited = btn.classList.contains('favorited');
                 btn.classList.toggle('favorited');
                 
                 await this.toggleFavorite(promptId);
             });
         });
         
-        // Card click (copy content)
+        // Card click (open edit modal)
         document.querySelectorAll('.prompt-card').forEach(card => {
-            card.addEventListener('click', async (e) => {
+            card.addEventListener('click', (e) => {
                 // Don't trigger if clicking buttons
                 if (e.target.closest('button')) return;
                 
@@ -364,17 +360,117 @@ class PromptManager {
                 const prompt = this.prompts.find(p => p.id === promptId);
                 
                 if (prompt) {
-                    const success = await this.copyToClipboard(prompt.content, promptId);
-                    if (success) {
-                        this.showToast('✅ 已复制到剪贴板', 'success');
-                    }
+                    this.openEditModal(prompt);
                 }
             });
         });
     }
 
+    // Open edit modal - FIXED
+    openEditModal(prompt) {
+        // Prevent multiple modals - Check if modal already exists
+        const existingModal = document.querySelector('.edit-modal-overlay');
+        if (existingModal) {
+            return;
+        }
+        
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'edit-modal-overlay';
+        overlay.innerHTML = `
+            <div class="edit-modal">
+                <div class="edit-modal-header">
+                    <span class="app-badge ${prompt.app}">${this.getAppName(prompt.app)}</span>
+                    <button class="edit-modal-close" title="关闭">×</button>
+                </div>
+                <textarea class="edit-modal-textarea" placeholder="编辑提示词内容...">${this.escapeHtml(prompt.content)}</textarea>
+                <div class="edit-modal-footer">
+                    <button class="edit-modal-save">保存</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Focus textarea
+        const textarea = overlay.querySelector('.edit-modal-textarea');
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        
+        // Close button
+        overlay.querySelector('.edit-modal-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeEditModal(overlay);
+        });
+        
+        // Click overlay to close
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                this.closeEditModal(overlay);
+            }
+        });
+        
+        // Save button
+        overlay.querySelector('.edit-modal-save').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const newContent = textarea.value.trim();
+            if (newContent) {
+                await this.saveEditedPrompt(prompt.id, newContent);
+                this.closeEditModal(overlay);
+            } else {
+                this.showToast('内容不能为空');
+            }
+        });
+        
+        // ESC key to close
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeEditModal(overlay);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+        
+        // Store handler for cleanup
+        overlay._escHandler = escHandler;
+    }
+    
+    // Close edit modal - FIXED animation timing
+    closeEditModal(overlay) {
+        if (!overlay || !overlay.parentNode) return;
+        
+        // Remove ESC handler
+        if (overlay._escHandler) {
+            document.removeEventListener('keydown', overlay._escHandler);
+        }
+        
+        // Add closing class for animation
+        overlay.classList.add('closing');
+        
+        // Remove after animation completes (200ms to match CSS)
+        setTimeout(() => {
+            if (overlay && overlay.parentNode) {
+                overlay.remove();
+            }
+        }, 200);
+    }
+    
+    // Save edited prompt
+    async saveEditedPrompt(promptId, newContent) {
+        const promptIndex = this.prompts.findIndex(p => p.id === promptId);
+        if (promptIndex !== -1) {
+            this.prompts[promptIndex].content = newContent;
+            await this.saveData();
+            
+            // Re-render all tabs
+            this.renderAllTabs();
+            
+            this.showToast('保存成功');
+        }
+    }
+
     // Show toast notification
-    showToast(message, type = 'success') {
+    showToast(message) {
         // Remove existing toast
         const existingToast = document.querySelector('.toast');
         if (existingToast) {
@@ -384,28 +480,24 @@ class PromptManager {
         // Create new toast
         const toast = document.createElement('div');
         toast.className = 'toast';
-        toast.innerHTML = `<span class="toast-icon">${this.getToastIcon(type)}</span>${message}`;
+        toast.textContent = message;
+        
         document.body.appendChild(toast);
         
-        // Show toast
-        setTimeout(() => toast.classList.add('show'), 10);
+        // Show toast immediately
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
         
-        // Hide and remove toast
+        // Hide and remove toast after 1 second
         setTimeout(() => {
             toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 2500);
-    }
-
-    // Get toast icon based on type
-    getToastIcon(type) {
-        const icons = {
-            success: '✅',
-            error: '❌',
-            warning: '⚠️',
-            info: 'ℹ️'
-        };
-        return icons[type] || icons.info;
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }, 1000);
     }
 
     // Get app display name
@@ -419,19 +511,6 @@ class PromptManager {
             'other': '其他应用'
         };
         return appNames[appKey] || appKey;
-    }
-
-    // Get app logo path
-    getAppLogo(appKey) {
-        const logos = {
-            'deepseek': 'icons/deepseek.png',
-            'chatgpt': 'icons/chatgpt.png',
-            'gemini': 'icons/gemini.png',
-            'grok': 'icons/grok.png',
-            'claude': 'icons/claude.png',
-            'other': 'icons/otherAI.png'
-        };
-        return logos[appKey] || '';
     }
 
     // Format date
@@ -461,6 +540,98 @@ class PromptManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Initialize editable title
+    async initEditableTitle() {
+        const titleElement = document.getElementById('app-title');
+        if (!titleElement) return;
+
+        // Load saved title
+        try {
+            const result = await chrome.storage.sync.get(['appTitle']);
+            if (result.appTitle) {
+                titleElement.textContent = result.appTitle;
+            }
+        } catch (error) {
+            console.error('Failed to load title:', error);
+        }
+
+        // Make title editable
+        titleElement.setAttribute('contenteditable', 'false');
+        
+        // Click to edit
+        titleElement.addEventListener('click', () => {
+            titleElement.setAttribute('contenteditable', 'true');
+            titleElement.classList.add('editing');
+            titleElement.focus();
+            
+            // Select all text
+            const range = document.createRange();
+            range.selectNodeContents(titleElement);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        });
+
+        // Save on blur or Enter
+        const saveTitle = async () => {
+            let newTitle = titleElement.textContent.trim();
+            
+            // Limit to 20 characters
+            if (newTitle.length > 20) {
+                newTitle = newTitle.substring(0, 20);
+            }
+            
+            // Restore default if empty
+            if (!newTitle) {
+                newTitle = 'PromptCV';
+            }
+            
+            titleElement.textContent = newTitle;
+            titleElement.setAttribute('contenteditable', 'false');
+            titleElement.classList.remove('editing');
+            
+            // Save to storage
+            try {
+                await chrome.storage.sync.set({ appTitle: newTitle });
+            } catch (error) {
+                console.error('Failed to save title:', error);
+            }
+        };
+
+        // Real-time character limit during editing
+        const enforceCharacterLimit = () => {
+            const currentText = titleElement.textContent;
+            if (currentText.length > 20) {
+                titleElement.textContent = currentText.substring(0, 20);
+                // Move cursor to end
+                const range = document.createRange();
+                const selection = window.getSelection();
+                range.selectNodeContents(titleElement);
+                range.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        };
+
+        titleElement.addEventListener('blur', saveTitle);
+        
+        titleElement.addEventListener('input', enforceCharacterLimit);
+        
+        titleElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                titleElement.blur();
+            }
+            if (e.key === 'Escape') {
+                // Restore original title
+                chrome.storage.sync.get(['appTitle'], (result) => {
+                    titleElement.textContent = result.appTitle || 'PromptCV';
+                    titleElement.blur();
+                });
+            }
+        });
     }
 }
 
