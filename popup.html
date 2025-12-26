@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptCV - AI提示词管理器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Google Rainbow Border -->
+    <div class="rainbow-border"></div>
+    <div class="rainbow-border-right"></div>
+    <div class="rainbow-border-bottom"></div>
+    
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">
+            <span class="header-icon">💡</span>
+            <h1>PromptCV</h1>
+        </div>
+        <div class="header-subtitle">专业AI提示词管理工具</div>
+    </div>
+    
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="favorites">
+            <span class="tab-icon">⭐</span>
+            <span>收藏</span>
+        </button>
+        <button class="tab-btn" data-tab="history">
+            <span class="tab-icon">🕒</span>
+            <span>历史</span>
+        </button>
+        <button class="tab-btn" data-tab="all">
+            <span class="tab-icon">📚</span>
+            <span>全部</span>
+        </button>
+        <button class="tab-btn" data-tab="add">
+            <span class="tab-icon">➕</span>
+            <span>添加</span>
+        </button>
+    </div>
+    
+    <!-- Content Area -->
+    <div class="content">
+        <!-- Favorites Tab -->
+        <div id="favorites" class="tab-content active">
+            <div id="favorites-list"></div>
+            <div id="favorites-empty" class="empty-state" style="display: none;">
+                <div class="empty-icon">⭐</div>
+                <h3>暂无收藏的提示词</h3>
+                <p>点击提示词卡片上的星标可以添加收藏<br>收藏的提示词会显示在这里，方便快速访问</p>
+            </div>
+        </div>
+        
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <div id="history-list"></div>
+            <div id="history-empty" class="empty-state" style="display: none;">
+                <div class="empty-icon">🕒</div>
+                <h3>暂无使用历史</h3>
+                <p>复制提示词后，记录会自动出现在这里<br>最多保存最近20条使用记录</p>
+            </div>
+        </div>
+        
+        <!-- All Prompts Tab -->
+        <div id="all" class="tab-content">
+            <div id="all-list"></div>
+            <div id="all-empty" class="empty-state" style="display: none;">
+                <div class="empty-icon">📚</div>
+                <h3>提示词库为空</h3>
+                <p>点击"添加"按钮创建你的第一条提示词<br>所有提示词会按时间顺序显示在这里</p>
+            </div>
+        </div>
+        
+        <!-- Add Prompt Tab -->
+        <div id="add" class="tab-content">
+            <form class="add-prompt-form" id="add-prompt-form">
+                <div class="form-group">
+                    <label class="form-label">
+                        <span>🖥️</span>
+                        <span>目标应用</span>
+                    </label>
+                    <select class="form-control" id="app-select" required>
+                        <option value="">请选择使用的AI应用...</option>
+                        <option value="deepseek">🤖 DeepSeek</option>
+                        <option value="gemini">⭐ Google Gemini</option>
+                        <option value="chatgpt">💬 ChatGPT</option>
+                        <option value="claude">🌐 Claude</option>
+                        <option value="other">📝 其他应用</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <span>✏️</span>
+                        <span>提示词内容</span>
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="prompt-content" 
+                        placeholder="请输入完整的提示词内容...&#10;&#10;例如：&#10;请帮我分析这段代码，找出潜在的性能问题和改进建议。重点关注：&#10;1. 算法效率&#10;2. 内存使用&#10;3. 代码可读性&#10;4. 最佳实践"
+                        required></textarea>
+                </div>
+                
+                <button type="button" class="save-btn" id="save-btn">
+                    <span>💾</span>
+                    <span>保存并复制</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
