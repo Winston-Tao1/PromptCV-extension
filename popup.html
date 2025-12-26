@@ -15,7 +15,7 @@
     <!-- Header -->
     <div class="header">
         <div class="header-title">
-            <span class="header-icon">💡</span>
+            <span class="header-icon"></span>
             <h1>PromptCV</h1>
         </div>
         <div class="header-subtitle">专业AI提示词管理工具</div>
@@ -24,19 +24,19 @@
     <!-- Navigation Tabs -->
     <div class="tabs">
         <button class="tab-btn active" data-tab="favorites">
-            <span class="tab-icon">⭐</span>
+            <span class="tab-icon"></span>
             <span>收藏</span>
         </button>
         <button class="tab-btn" data-tab="history">
-            <span class="tab-icon">🕒</span>
+            <span class="tab-icon"></span>
             <span>历史</span>
         </button>
         <button class="tab-btn" data-tab="all">
-            <span class="tab-icon">📚</span>
+            <span class="tab-icon"></span>
             <span>全部</span>
         </button>
         <button class="tab-btn" data-tab="add">
-            <span class="tab-icon">➕</span>
+            <span class="tab-icon"></span>
             <span>添加</span>
         </button>
     </div>
@@ -47,7 +47,7 @@
         <div id="favorites" class="tab-content active">
             <div id="favorites-list"></div>
             <div id="favorites-empty" class="empty-state" style="display: none;">
-                <div class="empty-icon">⭐</div>
+                <div class="empty-icon" style="background-image: url('icons/tabs_star.png');"></div>
                 <h3>暂无收藏的提示词</h3>
                 <p>点击提示词卡片上的星标可以添加收藏<br>收藏的提示词会显示在这里，方便快速访问</p>
             </div>
@@ -57,7 +57,7 @@
         <div id="history" class="tab-content">
             <div id="history-list"></div>
             <div id="history-empty" class="empty-state" style="display: none;">
-                <div class="empty-icon">🕒</div>
+                <div class="empty-icon" style="background-image: url('icons/tabs_history.png');"></div>
                 <h3>暂无使用历史</h3>
                 <p>复制提示词后，记录会自动出现在这里<br>最多保存最近20条使用记录</p>
             </div>
@@ -67,7 +67,7 @@
         <div id="all" class="tab-content">
             <div id="all-list"></div>
             <div id="all-empty" class="empty-state" style="display: none;">
-                <div class="empty-icon">📚</div>
+                <div class="empty-icon" style="background-image: url('icons/tabs_list.png');"></div>
                 <h3>提示词库为空</h3>
                 <p>点击"添加"按钮创建你的第一条提示词<br>所有提示词会按时间顺序显示在这里</p>
             </div>

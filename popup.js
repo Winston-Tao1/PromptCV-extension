@@ -198,7 +198,6 @@ class PromptManager {
                 <div class="card-header">
                     <span class="app-badge ${prompt.app}">${this.getAppName(prompt.app)}</span>
                     <button class="favorite-btn ${prompt.isFavorite ? 'favorited' : ''}" data-action="toggle-favorite" title="${prompt.isFavorite ? '取消收藏' : '收藏'}">
-                        ${prompt.isFavorite ? '⭐' : '☆'}
                     </button>
                 </div>
                 <div class="prompt-preview" title="${escapedContent}">
@@ -350,7 +349,6 @@ class PromptManager {
                 // Update UI immediately for better UX
                 const currentFavorited = btn.classList.contains('favorited');
                 btn.classList.toggle('favorited');
-                btn.textContent = currentFavorited ? '☆' : '⭐';
                 
                 await this.toggleFavorite(promptId);
             });
@@ -434,19 +432,6 @@ class PromptManager {
             'other': 'icons/otherAI.png'
         };
         return logos[appKey] || '';
-    }
-
-    // Get app emoji (for backward compatibility)
-    getAppEmoji(appKey) {
-        const emojis = {
-            'deepseek': '🤖',
-            'chatgpt': '💬',
-            'gemini': '⭐',
-            'grok': '🚀',
-            'claude': '🌐',
-            'other': '📝'
-        };
-        return emojis[appKey] || '📝';
     }
 
     // Format date

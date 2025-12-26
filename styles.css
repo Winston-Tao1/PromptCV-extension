@@ -150,8 +150,13 @@ body {
 }
 
 .header-icon {
-    font-size: 26px;
-    line-height: 1;
+    width: 28px;
+    height: 28px;
+    background-image: url('icons/prompt_logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: inline-block;
 }
 
 .header h1 {
@@ -214,7 +219,28 @@ body {
 }
 
 .tab-icon {
-    font-size: 15px;
+    width: 16px;
+    height: 16px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: inline-block;
+}
+
+.tab-btn[data-tab="favorites"] .tab-icon {
+    background-image: url('icons/tabs_star.png');
+}
+
+.tab-btn[data-tab="history"] .tab-icon {
+    background-image: url('icons/tabs_history.png');
+}
+
+.tab-btn[data-tab="all"] .tab-icon {
+    background-image: url('icons/tabs_list.png');
+}
+
+.tab-btn[data-tab="add"] .tab-icon {
+    background-image: url('icons/tabs_add.png');
 }
 
 /* Content Area - Only remove bottom white area */
@@ -326,7 +352,6 @@ body {
 .favorite-btn {
     background: none;
     border: none;
-    font-size: 18px;
     cursor: pointer;
     transition: all var(--transition-fast);
     padding: 0;
@@ -336,6 +361,9 @@ body {
     align-items: center;
     justify-content: center;
     line-height: 1;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .favorite-btn:hover {
@@ -344,11 +372,11 @@ body {
 }
 
 .favorite-btn.favorited {
-    color: #FFD700;
+    background-image: url('icons/star.png');
 }
 
 .favorite-btn:not(.favorited) {
-    color: #DADCE0;
+    background-image: url('icons/dis_star.png');
 }
 
 .prompt-preview {
@@ -528,9 +556,14 @@ textarea.form-control {
 }
 
 .empty-icon {
-    font-size: 56px;
-    margin-bottom: 14px;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 14px;
     opacity: 0.4;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block;
 }
 
 .empty-state h3 {
