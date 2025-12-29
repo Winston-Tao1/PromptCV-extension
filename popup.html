@@ -13,8 +13,12 @@
     <!-- Header -->
     <div class="header">
         <div class="header-title">
-            <span class="header-icon"></span>
+            <div class="header-icon-wrapper" id="header-icon-wrapper">
+                <span class="header-icon" id="header-icon"></span>
+                <span class="header-icon-upload">↑</span>
+            </div>
             <h1 id="app-title" class="editable-title" title="点击编辑">PromptCV</h1>
+            <input type="file" id="logo-file-input" accept="image/*" style="display: none;">
         </div>
         <div class="header-subtitle">专业AI提示词管理工具</div>
     </div>
@@ -36,6 +40,10 @@
         <button class="tab-btn" data-tab="add">
             <span class="tab-icon"></span>
             <span>添加</span>
+        </button>
+        <button class="tab-btn" data-tab="cloud">
+            <span class="tab-icon"></span>
+            <span>云盘</span>
         </button>
     </div>
     
@@ -107,6 +115,57 @@
                     <span>保存</span>
                 </button>
             </form>
+        </div>
+        
+        <!-- Cloud Disk Tab -->
+        <div id="cloud" class="tab-content">
+            <div class="cloud-editor">
+                <!-- Formatting Toolbar -->
+                <div class="cloud-toolbar">
+                    <button type="button" class="toolbar-btn" data-command="bold" title="加粗">
+                        <strong>B</strong>
+                    </button>
+                    <button type="button" class="toolbar-btn" data-command="underline" title="下划线">
+                        <u>U</u>
+                    </button>
+                    <button type="button" class="toolbar-btn" data-command="hiliteColor" title="背景色">
+                        <span style="background: yellow; padding: 2px 4px;">A</span>
+                    </button>
+                    <select class="toolbar-select" id="font-select" title="字体">
+                        <option value="Arial">Arial</option>
+                        <option value="'Times New Roman'">Times New Roman</option>
+                        <option value="'Courier New'">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="'Comic Sans MS'">Comic Sans MS</option>
+                        <option value="'Microsoft YaHei', 微软雅黑">微软雅黑</option>
+                        <option value="SimSun, 宋体">宋体</option>
+                        <option value="SimHei, 黑体">黑体</option>
+                        <option value="KaiTi, 楷体">楷体</option>
+                    </select>
+                    <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="无序列表">
+                        ☰
+                    </button>
+                    <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="有序列表">
+                        ≡
+                    </button>
+                </div>
+                
+                <!-- Rich Text Editor -->
+                <div class="cloud-content" contenteditable="true" id="cloud-editor" placeholder="在此输入文本内容，支持粘贴图片..."></div>
+                
+                <!-- Action Buttons -->
+                <div class="cloud-actions">
+                    <button type="button" class="cloud-save-btn" id="cloud-save-btn">
+                        <img src="icons/tabs_cache.png" class="save-btn-icon" alt="保存">
+                        <span>保存</span>
+                    </button>
+                    <button type="button" class="cloud-upload-btn" id="cloud-upload-btn">
+                        📤 上传文件
+                    </button>
+                    <input type="file" id="cloud-file-input" accept=".txt,.doc,.docx,.pdf,.xls,.xlsx,.ppt,.pptx" style="display: none;">
+                </div>
+            </div>
         </div>
     </div>
     

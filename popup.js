@@ -5,11 +5,17 @@ class PromptManager {
     constructor() {
         this.prompts = [];
         this.history = [];
+        this.cloudData = {
+            content: '',
+            files: [],
+            lastModified: null
+        };
         this.settings = {
             maxPrompts: 20,
             maxHistory: 20,
             syncEnabled: true
         };
+        this.autoSaveTimeout = null;
         this.init();
     }
 
@@ -17,16 +23,19 @@ class PromptManager {
         await this.loadData();
         this.initEventListeners();
         this.initEditableTitle();
+        this.initLogoUpload();
+        this.initCloudDisk();
         this.renderAllTabs();
     }
 
     // Load data from Chrome Storage
     async loadData() {
         try {
-            const result = await chrome.storage.sync.get(['prompts', 'history', 'settings']);
+            const result = await chrome.storage.sync.get(['prompts', 'history', 'settings', 'cloudData']);
             this.prompts = result.prompts || [];
             this.history = result.history || [];
             this.settings = result.settings || this.settings;
+            this.cloudData = result.cloudData || this.cloudData;
         } catch (error) {
             console.error('Failed to load data:', error);
             this.showToast('数据加载失败');
@@ -47,7 +56,8 @@ class PromptManager {
             await chrome.storage.sync.set({
                 prompts: this.prompts,
                 history: this.history,
-                settings: this.settings
+                settings: this.settings,
+                cloudData: this.cloudData
             });
         } catch (error) {
             console.error('Failed to save data:', error);
@@ -317,13 +327,27 @@ class PromptManager {
         }
     }
 
-    // Attach event listeners to cards
+    // Attach event listeners to cards (use event delegation)
     attachCardListeners() {
-        // Copy buttons
-        document.querySelectorAll('.copy-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
+        // Remove any existing delegated listeners first
+        const activeTabContent = document.querySelector('.tab-content.active');
+        if (!activeTabContent) return;
+        
+        // Use event delegation on the container instead of individual elements
+        const container = activeTabContent.querySelector('[id$="-list"]');
+        if (!container) return;
+        
+        // Remove old listener if exists
+        if (container._clickHandler) {
+            container.removeEventListener('click', container._clickHandler);
+        }
+        
+        // Create new click handler with event delegation
+        container._clickHandler = async (e) => {
+            // Handle copy button clicks
+            if (e.target.closest('.copy-btn')) {
                 e.stopPropagation();
-                const card = btn.closest('.prompt-card');
+                const card = e.target.closest('.prompt-card');
                 const promptId = card.getAttribute('data-id');
                 const prompt = this.prompts.find(p => p.id === promptId);
                 
@@ -333,13 +357,13 @@ class PromptManager {
                         this.showToast('复制成功');
                     }
                 }
-            });
-        });
-        
-        // Favorite buttons
-        document.querySelectorAll('.favorite-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
+                return;
+            }
+            
+            // Handle favorite button clicks
+            if (e.target.closest('.favorite-btn')) {
                 e.stopPropagation();
+                const btn = e.target.closest('.favorite-btn');
                 const card = btn.closest('.prompt-card');
                 const promptId = card.getAttribute('data-id');
                 
@@ -347,23 +371,23 @@ class PromptManager {
                 btn.classList.toggle('favorited');
                 
                 await this.toggleFavorite(promptId);
-            });
-        });
-        
-        // Card click (open edit modal)
-        document.querySelectorAll('.prompt-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                // Don't trigger if clicking buttons
-                if (e.target.closest('button')) return;
-                
+                return;
+            }
+            
+            // Handle card clicks (open edit modal)
+            const card = e.target.closest('.prompt-card');
+            if (card && !e.target.closest('button')) {
                 const promptId = card.getAttribute('data-id');
                 const prompt = this.prompts.find(p => p.id === promptId);
                 
                 if (prompt) {
                     this.openEditModal(prompt);
                 }
-            });
-        });
+            }
+        };
+        
+        // Attach the delegated listener
+        container.addEventListener('click', container._clickHandler);
     }
 
     // Open edit modal - FIXED
@@ -540,6 +564,354 @@ class PromptManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Initialize Cloud Disk
+    initCloudDisk() {
+        const cloudEditor = document.getElementById('cloud-editor');
+        if (!cloudEditor) return;
+
+        // Load saved content
+        if (this.cloudData.content) {
+            cloudEditor.innerHTML = this.cloudData.content;
+        }
+
+        // Toolbar buttons
+        document.querySelectorAll('.toolbar-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const command = btn.getAttribute('data-command');
+                
+                if (command === 'hiliteColor') {
+                    document.execCommand(command, false, 'yellow');
+                } else {
+                    document.execCommand(command, false, null);
+                }
+                
+                cloudEditor.focus();
+            });
+        });
+
+        // Font selector
+        const fontSelect = document.getElementById('font-select');
+        if (fontSelect) {
+            fontSelect.addEventListener('change', () => {
+                document.execCommand('fontName', false, fontSelect.value);
+                cloudEditor.focus();
+            });
+        }
+
+        // Auto-save on input
+        cloudEditor.addEventListener('input', () => {
+            this.scheduleAutoSave();
+        });
+
+        // Paste event for images
+        cloudEditor.addEventListener('paste', (e) => {
+            this.handlePaste(e);
+        });
+
+        // Upload button
+        const uploadBtn = document.getElementById('cloud-upload-btn');
+        const fileInput = document.getElementById('cloud-file-input');
+        
+        if (uploadBtn && fileInput) {
+            uploadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                this.handleFileUpload(e);
+            });
+        }
+
+        // Save button
+        const saveBtn = document.getElementById('cloud-save-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async () => {
+                await this.saveCloudData();
+                this.showToast('已保存并同步到云端');
+            });
+        }
+    }
+
+    // Schedule auto-save
+    scheduleAutoSave() {
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+        }
+
+        this.autoSaveTimeout = setTimeout(async () => {
+            await this.saveCloudData(false);
+        }, 2000); // Auto-save after 2 seconds of inactivity
+    }
+
+    // Save cloud data
+    async saveCloudData(showToast = false) {
+        const cloudEditor = document.getElementById('cloud-editor');
+        if (!cloudEditor) return;
+
+        this.cloudData.content = cloudEditor.innerHTML;
+        this.cloudData.lastModified = new Date().toISOString();
+
+        await this.saveData();
+
+        if (showToast) {
+            this.showToast('保存成功');
+        }
+    }
+
+    // Handle paste event
+    handlePaste(e) {
+        const items = e.clipboardData.items;
+        
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            
+            // Handle images
+            if (item.type.indexOf('image') !== -1) {
+                e.preventDefault();
+                
+                const file = item.getAsFile();
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                    
+                    // Wrap in thumbnail container
+                    const thumbnail = this.createImageThumbnail(img.src);
+                    
+                    // Insert at cursor position
+                    const selection = window.getSelection();
+                    if (selection.rangeCount > 0) {
+                        const range = selection.getRangeAt(0);
+                        range.deleteContents();
+                        range.insertNode(thumbnail);
+                        
+                        // Move cursor after image
+                        range.setStartAfter(thumbnail);
+                        range.setEndAfter(thumbnail);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    } else {
+                        document.getElementById('cloud-editor').appendChild(thumbnail);
+                    }
+                    
+                    this.scheduleAutoSave();
+                };
+                
+                reader.readAsDataURL(file);
+                break;
+            }
+        }
+    }
+
+    // Handle file upload
+    handleFileUpload(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const file = files[0];
+        const fileSize = this.formatFileSize(file.size);
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        
+        // Validate file type
+        const allowedTypes = ['txt', 'doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx'];
+        if (!allowedTypes.includes(fileExt)) {
+            this.showToast('不支持的文件格式');
+            e.target.value = '';
+            return;
+        }
+
+        // Read file as base64
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const fileData = {
+                name: file.name,
+                size: fileSize,
+                type: file.type,
+                ext: fileExt,
+                data: event.target.result
+            };
+
+            // Create thumbnail
+            const thumbnail = this.createFileThumbnail(fileData);
+            
+            // Insert at cursor position
+            const cloudEditor = document.getElementById('cloud-editor');
+            const selection = window.getSelection();
+            
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(thumbnail);
+                
+                // Move cursor after thumbnail
+                range.setStartAfter(thumbnail);
+                range.setEndAfter(thumbnail);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            } else {
+                cloudEditor.appendChild(thumbnail);
+            }
+
+            this.scheduleAutoSave();
+            this.showToast('文件已添加');
+        };
+
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    }
+
+    // Create file thumbnail
+    createFileThumbnail(fileData) {
+        const thumbnail = document.createElement('span');
+        thumbnail.className = 'cloud-thumbnail';
+        thumbnail.contentEditable = 'false';
+        thumbnail.setAttribute('data-file', JSON.stringify(fileData));
+
+        const icon = this.getFileIcon(fileData.ext);
+        
+        thumbnail.innerHTML = `
+            <span class="cloud-thumbnail-icon">${icon}</span>
+            <span class="cloud-thumbnail-info">
+                <span class="cloud-thumbnail-name">${this.escapeHtml(fileData.name)}</span>
+                <span class="cloud-thumbnail-size">${fileData.size}</span>
+            </span>
+            <button class="cloud-thumbnail-remove" type="button">×</button>
+        `;
+
+        // Remove button
+        const removeBtn = thumbnail.querySelector('.cloud-thumbnail-remove');
+        removeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            thumbnail.remove();
+            this.scheduleAutoSave();
+        });
+
+        return thumbnail;
+    }
+
+    // Create image thumbnail
+    createImageThumbnail(src) {
+        const container = document.createElement('span');
+        container.className = 'cloud-image-thumbnail';
+        container.contentEditable = 'false';
+
+        const img = document.createElement('img');
+        img.src = src;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'cloud-image-remove';
+        removeBtn.type = 'button';
+        removeBtn.textContent = '×';
+        
+        removeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            container.remove();
+            this.scheduleAutoSave();
+        });
+
+        container.appendChild(img);
+        container.appendChild(removeBtn);
+
+        return container;
+    }
+
+    // Get file icon based on extension
+    getFileIcon(ext) {
+        const icons = {
+            'txt': '📄',
+            'doc': '📘',
+            'docx': '📘',
+            'pdf': '📕',
+            'xls': '📗',
+            'xlsx': '📗',
+            'ppt': '📙',
+            'pptx': '📙'
+        };
+        return icons[ext] || '📄';
+    }
+
+    // Format file size
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // Initialize logo upload
+    async initLogoUpload() {
+        const iconWrapper = document.getElementById('header-icon-wrapper');
+        const headerIcon = document.getElementById('header-icon');
+        const logoFileInput = document.getElementById('logo-file-input');
+
+        if (!iconWrapper || !headerIcon || !logoFileInput) return;
+
+        // Load saved logo from local storage
+        try {
+            const result = await chrome.storage.local.get(['customLogo']);
+            if (result.customLogo) {
+                headerIcon.style.backgroundImage = `url('${result.customLogo}')`;
+            }
+        } catch (error) {
+            console.error('Failed to load custom logo:', error);
+        }
+
+        // Click to upload
+        iconWrapper.addEventListener('click', () => {
+            logoFileInput.click();
+        });
+
+        // Handle file selection
+        logoFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                this.showToast('请选择图片文件');
+                e.target.value = '';
+                return;
+            }
+
+            // Validate file size (max 1MB for local storage)
+            if (file.size > 1024 * 1024) {
+                this.showToast('图片文件过大（最大1MB）');
+                e.target.value = '';
+                return;
+            }
+
+            // Read file as base64
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const logoData = event.target.result;
+
+                // Update UI immediately
+                headerIcon.style.backgroundImage = `url('${logoData}')`;
+
+                // Save to local storage (has larger size limit than sync)
+                try {
+                    await chrome.storage.local.set({ customLogo: logoData });
+                    this.showToast('Logo已更新');
+                } catch (error) {
+                    console.error('Failed to save logo:', error);
+                    this.showToast('保存失败：' + error.message);
+                    // Restore default logo
+                    headerIcon.style.backgroundImage = "url('icons/prompt_logo.png')";
+                }
+            };
+
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        });
     }
 
     // Initialize editable title
