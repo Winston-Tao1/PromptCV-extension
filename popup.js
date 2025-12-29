@@ -27,21 +27,25 @@ class PromptManager {
         this.renderAllTabs();
     }
 
-    // Load data from Chrome Local Storage
+    // Load data from Chrome Storage (Sync for prompts/history, Local for cache)
     async loadData() {
         try {
-            const result = await chrome.storage.local.get(['prompts', 'history', 'settings', 'cacheData']);
-            this.prompts = result.prompts || [];
-            this.history = result.history || [];
-            this.settings = result.settings || this.settings;
-            this.cacheData = result.cacheData || this.cacheData;
+            // Load prompts, history, settings from Sync Storage
+            const syncResult = await chrome.storage.sync.get(['prompts', 'history', 'settings']);
+            this.prompts = syncResult.prompts || [];
+            this.history = syncResult.history || [];
+            this.settings = syncResult.settings || this.settings;
+            
+            // Load cache data from Local Storage
+            const localResult = await chrome.storage.local.get(['cacheData']);
+            this.cacheData = localResult.cacheData || this.cacheData;
         } catch (error) {
             console.error('Failed to load data:', error);
             this.showToast('数据加载失败');
         }
     }
 
-    // Save data to Chrome Local Storage
+    // Save data to Chrome Storage (Sync for prompts/history, Local for cache)
     async saveData() {
         try {
             // Enforce 20-item limits
@@ -52,10 +56,15 @@ class PromptManager {
                 this.history = this.history.slice(0, this.settings.maxHistory);
             }
 
-            await chrome.storage.local.set({
+            // Save prompts, history, settings to Sync Storage (for cross-device sync)
+            await chrome.storage.sync.set({
                 prompts: this.prompts,
                 history: this.history,
-                settings: this.settings,
+                settings: this.settings
+            });
+            
+            // Save cache data to Local Storage (larger space, device-only)
+            await chrome.storage.local.set({
                 cacheData: this.cacheData
             });
         } catch (error) {
