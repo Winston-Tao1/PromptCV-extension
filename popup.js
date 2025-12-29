@@ -4,15 +4,18 @@
 class PromptManager {
     constructor() {
         this.prompts = [];
-        this.history = [];
         this.cacheData = {
             content: '',
             files: [],
             lastModified: null
         };
         this.settings = {
-            maxPrompts: 20,
-            maxHistory: 20
+            maxPrompts: 20
+        };
+        this.uiState = {
+            activeTab: 'favorites', // 默认首页
+            fontColor: '#000000',   // 默认字体颜色
+            bgColor: '#FFFFFF'      // 默认背景颜色
         };
         this.autoSaveTimeout = null;
         this.init();
@@ -24,48 +27,59 @@ class PromptManager {
         this.initEditableTitle();
         this.initLogoUpload();
         this.initCacheDisk();
-        this.renderAllTabs();
+        
+        // Restore active tab from UI state
+        if (this.uiState.activeTab) {
+            this.switchTab(this.uiState.activeTab);
+        } else {
+            this.renderAllTabs();
+        }
+        
+        // Restore color pickers
+        this.restoreColorPickers();
     }
 
     // Load data from Chrome Storage (Sync for prompts/history, Local for cache)
     async loadData() {
         try {
-            // Load prompts, history, settings from Sync Storage
-            const syncResult = await chrome.storage.sync.get(['prompts', 'history', 'settings']);
+            // Load prompts, settings from Sync Storage
+            const syncResult = await chrome.storage.sync.get(['prompts', 'settings']);
             this.prompts = syncResult.prompts || [];
-            this.history = syncResult.history || [];
             this.settings = syncResult.settings || this.settings;
             
             // Load cache data from Local Storage
             const localResult = await chrome.storage.local.get(['cacheData']);
             this.cacheData = localResult.cacheData || this.cacheData;
+            
+            // Load UI state from Local Storage
+            const uiResult = await chrome.storage.local.get(['uiState']);
+            if (uiResult.uiState) {
+                this.uiState = { ...this.uiState, ...uiResult.uiState };
+            }
         } catch (error) {
             console.error('Failed to load data:', error);
             this.showToast('数据加载失败');
         }
     }
 
-    // Save data to Chrome Storage (Sync for prompts/history, Local for cache)
+    // Save data to Chrome Storage (Sync for prompts, Local for cache)
     async saveData() {
         try {
             // Enforce 20-item limits
             if (this.prompts.length > this.settings.maxPrompts) {
                 this.prompts = this.prompts.slice(0, this.settings.maxPrompts);
             }
-            if (this.history.length > this.settings.maxHistory) {
-                this.history = this.history.slice(0, this.settings.maxHistory);
-            }
 
-            // Save prompts, history, settings to Sync Storage (for cross-device sync)
+            // Save prompts, settings to Sync Storage (for cross-device sync)
             await chrome.storage.sync.set({
                 prompts: this.prompts,
-                history: this.history,
                 settings: this.settings
             });
             
-            // Save cache data to Local Storage (larger space, device-only)
+            // Save cache data and UI state to Local Storage (larger space, device-only)
             await chrome.storage.local.set({
-                cacheData: this.cacheData
+                cacheData: this.cacheData,
+                uiState: this.uiState
             });
         } catch (error) {
             console.error('Failed to save data:', error);
@@ -102,6 +116,10 @@ class PromptManager {
             content.classList.toggle('active', content.id === tabId);
         });
 
+        // Save current tab to UI state
+        this.uiState.activeTab = tabId;
+        this.saveData();
+
         // Render tab content
         this.renderTab(tabId);
     }
@@ -112,9 +130,6 @@ class PromptManager {
             case 'favorites':
                 this.renderFavorites();
                 break;
-            case 'history':
-                this.renderHistory();
-                break;
             case 'all':
                 this.renderAllPrompts();
                 break;
@@ -124,7 +139,6 @@ class PromptManager {
     // Render all tabs
     renderAllTabs() {
         this.renderFavorites();
-        this.renderHistory();
         this.renderAllPrompts();
     }
 
@@ -146,30 +160,6 @@ class PromptManager {
             .slice(0, 20)
             .map(prompt => this.createPromptCard(prompt))
             .join('');
-        
-        this.attachCardListeners();
-    }
-
-    // Render history tab
-    renderHistory() {
-        const container = document.getElementById('history-list');
-        const emptyState = document.getElementById('history-empty');
-        
-        if (this.history.length === 0) {
-            container.innerHTML = '';
-            emptyState.style.display = 'block';
-            return;
-        }
-        
-        emptyState.style.display = 'none';
-        
-        // Show most recent 20 history items
-        const recentHistory = this.history.slice(0, 20);
-        container.innerHTML = recentHistory.map(item => {
-            const prompt = this.prompts.find(p => p.id === item.promptId);
-            if (!prompt) return '';
-            return this.createPromptCard(prompt, item.copiedAt);
-        }).filter(card => card !== '').join('');
         
         this.attachCardListeners();
     }
@@ -200,8 +190,8 @@ class PromptManager {
     }
 
     // Create prompt card HTML
-    createPromptCard(prompt, copiedAt = null) {
-        const date = copiedAt ? new Date(copiedAt) : new Date(prompt.createdAt);
+    createPromptCard(prompt) {
+        const date = new Date(prompt.createdAt);
         const timeStr = this.formatDate(date);
         
         // Preview text (max 120 characters)
@@ -222,7 +212,7 @@ class PromptManager {
                     ${escapedPreview}
                 </div>
                 <div class="card-footer">
-                    <span class="card-time">${copiedAt ? '📋 ' : '📅 '}${timeStr}</span>
+                    <span class="card-time">📅 ${timeStr}</span>
                     <button class="copy-btn" data-action="copy">
                         <span>📋</span> 复制
                     </button>
@@ -265,7 +255,7 @@ class PromptManager {
         await this.saveData();
         
         // Copy to clipboard
-        await this.copyToClipboard(newPrompt.content, newPrompt.id);
+        await this.copyToClipboard(newPrompt.content);
         
         // Clear form
         promptContent.value = '';
@@ -278,41 +268,14 @@ class PromptManager {
     }
 
     // Copy to clipboard
-    async copyToClipboard(text, promptId) {
+    async copyToClipboard(text) {
         try {
             await navigator.clipboard.writeText(text);
-            
-            // Add to history
-            this.addToHistory(promptId);
-            
             return true;
         } catch (error) {
             console.error('Copy failed:', error);
             this.showToast('复制失败');
             return false;
-        }
-    }
-
-    // Add to history
-    async addToHistory(promptId) {
-        const historyItem = {
-            promptId: promptId,
-            copiedAt: new Date().toISOString()
-        };
-        
-        // Add to beginning
-        this.history.unshift(historyItem);
-        
-        // Enforce 20-item limit
-        if (this.history.length > 20) {
-            this.history = this.history.slice(0, 20);
-        }
-        
-        await this.saveData();
-        
-        // Update history tab if it's active
-        if (document.getElementById('history').classList.contains('active')) {
-            this.renderHistory();
         }
     }
 
@@ -326,12 +289,6 @@ class PromptManager {
             // Re-render all tabs that might show this prompt
             this.renderFavorites();
             this.renderAllPrompts();
-            
-            // Always re-render history if it's active
-            const historyTab = document.getElementById('history');
-            if (historyTab && historyTab.classList.contains('active')) {
-                this.renderHistory();
-            }
         }
     }
 
@@ -360,7 +317,7 @@ class PromptManager {
                 const prompt = this.prompts.find(p => p.id === promptId);
                 
                 if (prompt) {
-                    const success = await this.copyToClipboard(prompt.content, promptId);
+                    const success = await this.copyToClipboard(prompt.content);
                     if (success) {
                         this.showToast('复制成功');
                     }
@@ -584,21 +541,15 @@ class PromptManager {
             cloudEditor.innerHTML = this.cacheData.content;
         }
 
-        // Toolbar buttons
-        document.querySelectorAll('.toolbar-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const command = btn.getAttribute('data-command');
-                
-                if (command === 'hiliteColor') {
-                    document.execCommand(command, false, 'yellow');
-                } else {
-                    document.execCommand(command, false, null);
-                }
-                
+        // Bold button
+        const boldBtn = document.getElementById('bold-btn');
+        if (boldBtn) {
+            boldBtn.addEventListener('click', () => {
+                document.execCommand('bold', false, null);
+                boldBtn.classList.toggle('active');
                 cloudEditor.focus();
             });
-        });
+        }
 
         // Font selector
         const fontSelect = document.getElementById('font-select');
@@ -609,9 +560,94 @@ class PromptManager {
             });
         }
 
-        // Auto-save on input
-        cloudEditor.addEventListener('input', () => {
-            this.scheduleAutoSave();
+        // Font size selector
+        const fontSizeSelect = document.getElementById('font-size-select');
+        if (fontSizeSelect) {
+            fontSizeSelect.addEventListener('change', () => {
+                document.execCommand('fontSize', false, fontSizeSelect.value);
+                cloudEditor.focus();
+            });
+        }
+
+        // Color picker buttons
+        this.initColorPickers(cloudEditor);
+
+        // Auto-save on input (with immediate save for delete actions)
+        cloudEditor.addEventListener('input', (e) => {
+            // Check if content was deleted (became empty)
+            const content = cloudEditor.innerHTML.trim();
+            const isEmpty = content === '' || content === '<br>' || content === '<div><br></div>';
+            
+            if (isEmpty) {
+                // If editor is now empty, save immediately to reflect the deletion
+                this.saveCacheData(false);
+                
+                // Re-apply colors from buttons when editor becomes empty
+                const fontColorBtn = document.getElementById('font-color-btn');
+                const bgColorBtn = document.getElementById('bg-color-btn');
+                
+                const fontColor = fontColorBtn ? fontColorBtn.getAttribute('data-current-color') : null;
+                const bgColor = bgColorBtn ? bgColorBtn.getAttribute('data-current-color') : null;
+                
+                // Apply the colors from buttons immediately
+                if (fontColor && fontColor !== '#000000') {
+                    document.execCommand('foreColor', false, fontColor);
+                }
+                if (bgColor && bgColor !== '#FFFFFF') {
+                    document.execCommand('hiliteColor', false, bgColor);
+                }
+            } else {
+                // Otherwise use normal auto-save with delay
+                this.scheduleAutoSave();
+            }
+        });
+
+        // Apply colors from buttons when user starts typing
+        cloudEditor.addEventListener('focus', () => {
+            // Read colors directly from the color picker buttons
+            const fontColorBtn = document.getElementById('font-color-btn');
+            const bgColorBtn = document.getElementById('bg-color-btn');
+            
+            const fontColor = fontColorBtn ? fontColorBtn.getAttribute('data-current-color') : null;
+            const bgColor = bgColorBtn ? bgColorBtn.getAttribute('data-current-color') : null;
+            
+            // Apply the colors from buttons
+            setTimeout(() => {
+                if (fontColor && fontColor !== '#000000') {
+                    document.execCommand('foreColor', false, fontColor);
+                }
+                if (bgColor && bgColor !== '#FFFFFF') {
+                    document.execCommand('hiliteColor', false, bgColor);
+                }
+            }, 10);
+        });
+
+        // Re-apply colors before each character input to ensure consistency
+        cloudEditor.addEventListener('beforeinput', (e) => {
+            // Only handle character input
+            if (e.inputType === 'insertText' || e.inputType === 'insertParagraph') {
+                const content = cloudEditor.innerHTML.trim();
+                const isEmpty = content === '' || content === '<br>' || content === '<div><br></div>';
+                
+                if (isEmpty) {
+                    // Read colors directly from the color picker buttons
+                    const fontColorBtn = document.getElementById('font-color-btn');
+                    const bgColorBtn = document.getElementById('bg-color-btn');
+                    
+                    const fontColor = fontColorBtn ? fontColorBtn.getAttribute('data-current-color') : null;
+                    const bgColor = bgColorBtn ? bgColorBtn.getAttribute('data-current-color') : null;
+                    
+                    // Apply the colors from buttons
+                    setTimeout(() => {
+                        if (fontColor && fontColor !== '#000000') {
+                            document.execCommand('foreColor', false, fontColor);
+                        }
+                        if (bgColor && bgColor !== '#FFFFFF') {
+                            document.execCommand('hiliteColor', false, bgColor);
+                        }
+                    }, 0);
+                }
+            }
         });
 
         // Paste event for images
@@ -948,6 +984,257 @@ class PromptManager {
             reader.readAsDataURL(file);
             e.target.value = '';
         });
+    }
+
+    // Initialize color pickers
+    initColorPickers(cloudEditor) {
+        const presetColors = [
+            '#000000', // 黑色
+            '#EA4335', // 红色
+            '#FBBC05', // 黄色
+            '#34A853', // 绿色
+            '#4285F4', // 蓝色
+            '#9C27B0', // 紫色
+            '#FF9800', // 橙色
+            '#FFFFFF'  // 白色
+        ];
+
+        // Font color picker
+        const fontColorBtn = document.getElementById('font-color-btn');
+        if (fontColorBtn) {
+            const picker = this.createColorPicker('foreColor', presetColors);
+            fontColorBtn.appendChild(picker);
+            
+            fontColorBtn.addEventListener('click', (e) => {
+                if (!e.target.closest('.color-picker-popup')) {
+                    picker.classList.toggle('show');
+                    // Close other pickers
+                    document.querySelectorAll('.color-picker-popup').forEach(p => {
+                        if (p !== picker) p.classList.remove('show');
+                    });
+                }
+            });
+        }
+
+        // Background color picker
+        const bgColorBtn = document.getElementById('bg-color-btn');
+        if (bgColorBtn) {
+            const picker = this.createColorPicker('hiliteColor', presetColors);
+            bgColorBtn.appendChild(picker);
+            
+            bgColorBtn.addEventListener('click', (e) => {
+                if (!e.target.closest('.color-picker-popup')) {
+                    picker.classList.toggle('show');
+                    // Close other pickers
+                    document.querySelectorAll('.color-picker-popup').forEach(p => {
+                        if (p !== picker) p.classList.remove('show');
+                    });
+                }
+            });
+        }
+
+        // Close pickers when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.color-picker-btn')) {
+                document.querySelectorAll('.color-picker-popup').forEach(p => {
+                    p.classList.remove('show');
+                });
+            }
+        });
+    }
+
+    // Create color picker popup
+    createColorPicker(command, presetColors) {
+        const popup = document.createElement('div');
+        popup.className = 'color-picker-popup';
+        
+        // Canvas for color spectrum
+        const canvasWrapper = document.createElement('div');
+        canvasWrapper.className = 'color-picker-canvas-wrapper';
+        
+        const canvas = document.createElement('canvas');
+        canvas.className = 'color-picker-canvas';
+        canvas.width = 200;
+        canvas.height = 200;
+        
+        canvasWrapper.appendChild(canvas);
+        popup.appendChild(canvasWrapper);
+        
+        // Draw color spectrum
+        const ctx = canvas.getContext('2d');
+        
+        // Draw hue gradient
+        const hueGrad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        hueGrad.addColorStop(0, '#FF0000');
+        hueGrad.addColorStop(0.17, '#FFFF00');
+        hueGrad.addColorStop(0.33, '#00FF00');
+        hueGrad.addColorStop(0.5, '#00FFFF');
+        hueGrad.addColorStop(0.67, '#0000FF');
+        hueGrad.addColorStop(0.83, '#FF00FF');
+        hueGrad.addColorStop(1, '#FF0000');
+        
+        ctx.fillStyle = hueGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw saturation/brightness gradient
+        const satGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        satGrad.addColorStop(0, 'rgba(255,255,255,1)');
+        satGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+        satGrad.addColorStop(0.5, 'rgba(0,0,0,0)');
+        satGrad.addColorStop(1, 'rgba(0,0,0,1)');
+        
+        ctx.fillStyle = satGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Handle canvas click
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const imageData = ctx.getImageData(x, y, 1, 1).data;
+            const color = `rgb(${imageData[0]}, ${imageData[1]}, ${imageData[2]})`;
+            const hexColor = this.rgbToHex(imageData[0], imageData[1], imageData[2]);
+            
+            this.applyColor(command, hexColor, popup);
+        });
+        
+        // Preset colors
+        const presetsContainer = document.createElement('div');
+        presetsContainer.className = 'color-picker-presets';
+        
+        presetColors.forEach(color => {
+            const preset = document.createElement('div');
+            preset.className = 'color-preset';
+            preset.style.background = color;
+            preset.style.cursor = 'pointer';
+            if (color === '#FFFFFF') {
+                preset.style.border = '1px solid #DADCE0';
+            }
+            
+            preset.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.applyColor(command, color, popup);
+            });
+            
+            // Also add mousedown listener for better responsiveness
+            preset.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+            });
+            
+            presetsContainer.appendChild(preset);
+        });
+        
+        popup.appendChild(presetsContainer);
+        
+        return popup;
+    }
+
+    // Apply color and update preview
+    applyColor(command, color, popup) {
+        const cloudEditor = document.getElementById('cloud-editor');
+        const btn = popup.parentElement;
+        
+        // IMPORTANT: Update button's data-current-color FIRST before any other operations
+        // This ensures the color is ready when focus/input events fire
+        btn.setAttribute('data-current-color', color);
+        
+        // Update color preview
+        const preview = btn.querySelector('.color-preview');
+        if (preview) {
+            preview.style.background = color;
+            if (color === 'transparent' || color === '#FFFFFF') {
+                preview.style.border = '1px solid #DADCE0';
+            } else {
+                preview.style.border = 'none';
+            }
+        }
+        
+        // Save color to UI state
+        if (command === 'foreColor') {
+            this.uiState.fontColor = color;
+        } else if (command === 'hiliteColor') {
+            this.uiState.bgColor = color;
+        }
+        this.saveData();
+        
+        // Focus editor
+        cloudEditor.focus();
+        
+        // Get current selection
+        const selection = window.getSelection();
+        
+        // If there's selected text, apply color to it
+        if (selection.rangeCount > 0 && selection.toString().length > 0) {
+            // For background color, wrap in span with inline style for better coverage
+            if (command === 'hiliteColor') {
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.style.backgroundColor = color;
+                span.style.padding = '2px 1px';
+                span.style.borderRadius = '2px';
+                span.style.verticalAlign = 'middle';
+                span.style.lineHeight = '1.4';
+                
+                try {
+                    range.surroundContents(span);
+                } catch (e) {
+                    // If surroundContents fails, use execCommand as fallback
+                    document.execCommand(command, false, color);
+                }
+            } else {
+                // For font color, use standard execCommand
+                document.execCommand(command, false, color);
+            }
+        } else {
+            // If no selection, simply use execCommand to set the color
+            // This will affect all new text typed after this point
+            document.execCommand(command, false, color);
+        }
+        
+        // Close popup
+        popup.classList.remove('show');
+        
+        // Trigger auto-save
+        this.scheduleAutoSave();
+    }
+
+    // Convert RGB to HEX
+    rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => {
+            const hex = x.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
+    }
+
+    // Restore color pickers from UI state
+    restoreColorPickers() {
+        // Restore font color picker
+        const fontColorBtn = document.getElementById('font-color-btn');
+        if (fontColorBtn && this.uiState.fontColor) {
+            const preview = fontColorBtn.querySelector('.color-preview');
+            if (preview) {
+                preview.style.background = this.uiState.fontColor;
+                if (this.uiState.fontColor === '#FFFFFF') {
+                    preview.style.border = '1px solid #DADCE0';
+                }
+            }
+            fontColorBtn.setAttribute('data-current-color', this.uiState.fontColor);
+        }
+
+        // Restore background color picker
+        const bgColorBtn = document.getElementById('bg-color-btn');
+        if (bgColorBtn && this.uiState.bgColor) {
+            const preview = bgColorBtn.querySelector('.color-preview');
+            if (preview) {
+                preview.style.background = this.uiState.bgColor;
+                if (this.uiState.bgColor === '#FFFFFF') {
+                    preview.style.border = '1px solid #DADCE0';
+                }
+            }
+            bgColorBtn.setAttribute('data-current-color', this.uiState.bgColor);
+        }
     }
 
     // Initialize editable title

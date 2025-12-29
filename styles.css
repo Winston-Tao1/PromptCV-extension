@@ -219,10 +219,6 @@ body {
     background-image: url('icons/tabs_star.png');
 }
 
-.tab-btn[data-tab="history"] .tab-icon {
-    background-image: url('icons/tabs_history.png');
-}
-
 .tab-btn[data-tab="all"] .tab-icon {
     background-image: url('icons/tabs_list.png');
 }
@@ -574,7 +570,7 @@ textarea.form-control {
     height: 18px;
     display: block;
     position: relative;
-    z-index: 1;
+    z-index: 0;
 }
 
 .save-btn span {
@@ -878,6 +874,8 @@ textarea.form-control {
     flex-direction: column;
     gap: 12px;
     height: 100%;
+    position: relative;
+    z-index: 0;
 }
 
 .cloud-toolbar {
@@ -889,6 +887,8 @@ textarea.form-control {
     border: 1px solid #DADCE0;
     border-radius: 8px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
 }
 
 .toolbar-btn {
@@ -904,6 +904,7 @@ textarea.form-control {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 .toolbar-btn:hover {
@@ -913,6 +914,85 @@ textarea.form-control {
 
 .toolbar-btn:active {
     transform: scale(0.95);
+}
+
+/* Bold button active state */
+.toolbar-btn.active {
+    background-color: #E8EAED;
+}
+
+/* Color picker button */
+.color-picker-btn {
+    padding: 4px 6px;
+    gap: 4px;
+}
+
+.color-preview {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+/* Color Picker Popup */
+.color-picker-popup {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid #DADCE0;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: var(--shadow-lg);
+    z-index: 10001;
+    display: none;
+}
+
+.color-picker-popup.show {
+    display: block;
+}
+
+/* Ensure color picker button has relative positioning */
+.color-picker-btn {
+    position: relative;
+}
+
+.color-picker-canvas-wrapper {
+    width: 200px;
+    height: 200px;
+    position: relative;
+    margin-bottom: 12px;
+    cursor: crosshair;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.color-picker-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.color-picker-presets {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.color-preset {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid #DADCE0;
+    transition: transform var(--transition-fast);
+}
+
+.color-preset:hover {
+    transform: scale(1.2);
+    box-shadow: var(--shadow-sm);
 }
 
 .toolbar-select {
@@ -949,6 +1029,7 @@ textarea.form-control {
     background: white;
     outline: none;
     position: relative;
+    z-index: 0;
 }
 
 .cloud-content:focus {
@@ -1091,6 +1172,8 @@ textarea.form-control {
     display: flex;
     gap: 10px;
     align-items: center;
+    position: relative;
+    z-index: 0;
 }
 
 .cloud-save-btn {
@@ -1110,6 +1193,7 @@ textarea.form-control {
     gap: 8px;
     box-shadow: var(--shadow-sm);
     position: relative;
+    z-index: 0;
 }
 
 .cloud-save-btn::before {

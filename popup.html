@@ -29,10 +29,6 @@
             <span class="tab-icon"></span>
             <span>收藏</span>
         </button>
-        <button class="tab-btn" data-tab="history">
-            <span class="tab-icon"></span>
-            <span>历史</span>
-        </button>
         <button class="tab-btn" data-tab="all">
             <span class="tab-icon"></span>
             <span>全部</span>
@@ -56,16 +52,6 @@
                 <div class="empty-icon" style="background-image: url('icons/tabs_star.png');"></div>
                 <h3>暂无收藏的提示词</h3>
                 <p>点击提示词卡片上的星标可以添加收藏<br>收藏的提示词会显示在这里，方便快速访问</p>
-            </div>
-        </div>
-        
-        <!-- History Tab -->
-        <div id="history" class="tab-content">
-            <div id="history-list"></div>
-            <div id="history-empty" class="empty-state" style="display: none;">
-                <div class="empty-icon" style="background-image: url('icons/tabs_history.png');"></div>
-                <h3>暂无使用历史</h3>
-                <p>复制提示词后，记录会自动出现在这里<br>最多保存最近20条使用记录</p>
             </div>
         </div>
         
@@ -122,14 +108,8 @@
             <div class="cloud-editor">
                 <!-- Formatting Toolbar -->
                 <div class="cloud-toolbar">
-                    <button type="button" class="toolbar-btn" data-command="bold" title="加粗">
+                    <button type="button" class="toolbar-btn" id="bold-btn" data-command="bold" title="加粗">
                         <strong>B</strong>
-                    </button>
-                    <button type="button" class="toolbar-btn" data-command="underline" title="下划线">
-                        <u>U</u>
-                    </button>
-                    <button type="button" class="toolbar-btn" data-command="hiliteColor" title="背景色">
-                        <span style="background: yellow; padding: 2px 4px;">A</span>
                     </button>
                     <select class="toolbar-select" id="font-select" title="字体">
                         <option value="Arial">Arial</option>
@@ -143,11 +123,22 @@
                         <option value="SimHei, 黑体">黑体</option>
                         <option value="KaiTi, 楷体">楷体</option>
                     </select>
-                    <button type="button" class="toolbar-btn" data-command="insertUnorderedList" title="无序列表">
-                        ☰
+                    <select class="toolbar-select" id="font-size-select" title="字体大小">
+                        <option value="1">8pt</option>
+                        <option value="2">10pt</option>
+                        <option value="3" selected>12pt</option>
+                        <option value="4">14pt</option>
+                        <option value="5">18pt</option>
+                        <option value="6">24pt</option>
+                        <option value="7">36pt</option>
+                    </select>
+                    <button type="button" class="toolbar-btn color-picker-btn" id="font-color-btn" title="字体颜色">
+                        <span class="color-preview" style="background: #000000;"></span>
+                        A
                     </button>
-                    <button type="button" class="toolbar-btn" data-command="insertOrderedList" title="有序列表">
-                        ≡
+                    <button type="button" class="toolbar-btn color-picker-btn" id="bg-color-btn" title="背景颜色">
+                        <span class="color-preview" style="background: transparent; border: 1px solid #DADCE0;"></span>
+                        A
                     </button>
                 </div>
                 
