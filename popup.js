@@ -5,15 +5,14 @@ class PromptManager {
     constructor() {
         this.prompts = [];
         this.history = [];
-        this.cloudData = {
+        this.cacheData = {
             content: '',
             files: [],
             lastModified: null
         };
         this.settings = {
             maxPrompts: 20,
-            maxHistory: 20,
-            syncEnabled: true
+            maxHistory: 20
         };
         this.autoSaveTimeout = null;
         this.init();
@@ -24,25 +23,25 @@ class PromptManager {
         this.initEventListeners();
         this.initEditableTitle();
         this.initLogoUpload();
-        this.initCloudDisk();
+        this.initCacheDisk();
         this.renderAllTabs();
     }
 
-    // Load data from Chrome Storage
+    // Load data from Chrome Local Storage
     async loadData() {
         try {
-            const result = await chrome.storage.sync.get(['prompts', 'history', 'settings', 'cloudData']);
+            const result = await chrome.storage.local.get(['prompts', 'history', 'settings', 'cacheData']);
             this.prompts = result.prompts || [];
             this.history = result.history || [];
             this.settings = result.settings || this.settings;
-            this.cloudData = result.cloudData || this.cloudData;
+            this.cacheData = result.cacheData || this.cacheData;
         } catch (error) {
             console.error('Failed to load data:', error);
             this.showToast('数据加载失败');
         }
     }
 
-    // Save data to Chrome Storage
+    // Save data to Chrome Local Storage
     async saveData() {
         try {
             // Enforce 20-item limits
@@ -53,11 +52,11 @@ class PromptManager {
                 this.history = this.history.slice(0, this.settings.maxHistory);
             }
 
-            await chrome.storage.sync.set({
+            await chrome.storage.local.set({
                 prompts: this.prompts,
                 history: this.history,
                 settings: this.settings,
-                cloudData: this.cloudData
+                cacheData: this.cacheData
             });
         } catch (error) {
             console.error('Failed to save data:', error);
@@ -566,14 +565,14 @@ class PromptManager {
         return div.innerHTML;
     }
 
-    // Initialize Cloud Disk
-    initCloudDisk() {
+    // Initialize Cache Disk (Local Storage)
+    initCacheDisk() {
         const cloudEditor = document.getElementById('cloud-editor');
         if (!cloudEditor) return;
 
-        // Load saved content
-        if (this.cloudData.content) {
-            cloudEditor.innerHTML = this.cloudData.content;
+        // Load saved content from local storage
+        if (this.cacheData.content) {
+            cloudEditor.innerHTML = this.cacheData.content;
         }
 
         // Toolbar buttons
@@ -625,34 +624,34 @@ class PromptManager {
             });
         }
 
-        // Save button
+        // Save button (ritual save with feedback)
         const saveBtn = document.getElementById('cloud-save-btn');
         if (saveBtn) {
             saveBtn.addEventListener('click', async () => {
-                await this.saveCloudData();
-                this.showToast('已保存并同步到云端');
+                await this.saveCacheData(true);
+                this.showToast('✓ 已保存到本地缓存');
             });
         }
     }
 
-    // Schedule auto-save
+    // Schedule auto-save (automatic local save)
     scheduleAutoSave() {
         if (this.autoSaveTimeout) {
             clearTimeout(this.autoSaveTimeout);
         }
 
         this.autoSaveTimeout = setTimeout(async () => {
-            await this.saveCloudData(false);
-        }, 2000); // Auto-save after 2 seconds of inactivity
+            await this.saveCacheData(false);
+        }, 1000); // Auto-save after 1 second of inactivity
     }
 
-    // Save cloud data
-    async saveCloudData(showToast = false) {
+    // Save cache data to local storage
+    async saveCacheData(showToast = false) {
         const cloudEditor = document.getElementById('cloud-editor');
         if (!cloudEditor) return;
 
-        this.cloudData.content = cloudEditor.innerHTML;
-        this.cloudData.lastModified = new Date().toISOString();
+        this.cacheData.content = cloudEditor.innerHTML;
+        this.cacheData.lastModified = new Date().toISOString();
 
         await this.saveData();
 
@@ -709,60 +708,56 @@ class PromptManager {
         }
     }
 
-    // Handle file upload
+    // Handle file upload (supports any file format)
     handleFileUpload(e) {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        const file = files[0];
-        const fileSize = this.formatFileSize(file.size);
-        const fileExt = file.name.split('.').pop().toLowerCase();
+        const cloudEditor = document.getElementById('cloud-editor');
         
-        // Validate file type
-        const allowedTypes = ['txt', 'doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx'];
-        if (!allowedTypes.includes(fileExt)) {
-            this.showToast('不支持的文件格式');
-            e.target.value = '';
-            return;
-        }
+        // Process multiple files
+        Array.from(files).forEach(file => {
+            const fileSize = this.formatFileSize(file.size);
+            const fileExt = file.name.split('.').pop().toLowerCase() || 'file';
 
-        // Read file as base64
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const fileData = {
-                name: file.name,
-                size: fileSize,
-                type: file.type,
-                ext: fileExt,
-                data: event.target.result
+            // Read file as base64
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const fileData = {
+                    name: file.name,
+                    size: fileSize,
+                    type: file.type || 'application/octet-stream',
+                    ext: fileExt,
+                    data: event.target.result
+                };
+
+                // Create thumbnail
+                const thumbnail = this.createFileThumbnail(fileData);
+                
+                // Insert at cursor position or append
+                const selection = window.getSelection();
+                
+                if (selection.rangeCount > 0 && cloudEditor.contains(selection.anchorNode)) {
+                    const range = selection.getRangeAt(0);
+                    range.deleteContents();
+                    range.insertNode(thumbnail);
+                    
+                    // Move cursor after thumbnail
+                    range.setStartAfter(thumbnail);
+                    range.setEndAfter(thumbnail);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                } else {
+                    cloudEditor.appendChild(thumbnail);
+                }
+
+                this.scheduleAutoSave();
             };
 
-            // Create thumbnail
-            const thumbnail = this.createFileThumbnail(fileData);
-            
-            // Insert at cursor position
-            const cloudEditor = document.getElementById('cloud-editor');
-            const selection = window.getSelection();
-            
-            if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(thumbnail);
-                
-                // Move cursor after thumbnail
-                range.setStartAfter(thumbnail);
-                range.setEndAfter(thumbnail);
-                selection.removeAllRanges();
-                selection.addRange(range);
-            } else {
-                cloudEditor.appendChild(thumbnail);
-            }
-
-            this.scheduleAutoSave();
-            this.showToast('文件已添加');
-        };
-
-        reader.readAsDataURL(file);
+            reader.readAsDataURL(file);
+        });
+        
+        this.showToast(`已添加 ${files.length} 个文件`);
         e.target.value = '';
     }
 
@@ -826,16 +821,48 @@ class PromptManager {
     // Get file icon based on extension
     getFileIcon(ext) {
         const icons = {
+            // Documents
             'txt': '📄',
             'doc': '📘',
             'docx': '📘',
             'pdf': '📕',
+            // Spreadsheets
             'xls': '📗',
             'xlsx': '📗',
+            'csv': '📗',
+            // Presentations
             'ppt': '📙',
-            'pptx': '📙'
+            'pptx': '📙',
+            // Images
+            'jpg': '🖼️',
+            'jpeg': '🖼️',
+            'png': '🖼️',
+            'gif': '🖼️',
+            'svg': '🖼️',
+            // Archives
+            'zip': '📦',
+            'rar': '📦',
+            '7z': '📦',
+            // Code
+            'js': '📜',
+            'py': '📜',
+            'java': '📜',
+            'html': '📜',
+            'css': '📜',
+            'json': '📜',
+            // Audio
+            'mp3': '🎵',
+            'wav': '🎵',
+            'flac': '🎵',
+            // Video
+            'mp4': '🎬',
+            'avi': '🎬',
+            'mkv': '🎬',
+            // Others
+            'xml': '📋',
+            'md': '📝'
         };
-        return icons[ext] || '📄';
+        return icons[ext.toLowerCase()] || '📄';
     }
 
     // Format file size
@@ -919,9 +946,9 @@ class PromptManager {
         const titleElement = document.getElementById('app-title');
         if (!titleElement) return;
 
-        // Load saved title
+        // Load saved title from local storage
         try {
-            const result = await chrome.storage.sync.get(['appTitle']);
+            const result = await chrome.storage.local.get(['appTitle']);
             if (result.appTitle) {
                 titleElement.textContent = result.appTitle;
             }
@@ -964,9 +991,9 @@ class PromptManager {
             titleElement.setAttribute('contenteditable', 'false');
             titleElement.classList.remove('editing');
             
-            // Save to storage
+            // Save to local storage
             try {
-                await chrome.storage.sync.set({ appTitle: newTitle });
+                await chrome.storage.local.set({ appTitle: newTitle });
             } catch (error) {
                 console.error('Failed to save title:', error);
             }
@@ -997,8 +1024,8 @@ class PromptManager {
                 titleElement.blur();
             }
             if (e.key === 'Escape') {
-                // Restore original title
-                chrome.storage.sync.get(['appTitle'], (result) => {
+                // Restore original title from local storage
+                chrome.storage.local.get(['appTitle'], (result) => {
                     titleElement.textContent = result.appTitle || 'PromptCV';
                     titleElement.blur();
                 });

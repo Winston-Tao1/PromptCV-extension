@@ -43,7 +43,7 @@
         </button>
         <button class="tab-btn" data-tab="cloud">
             <span class="tab-icon"></span>
-            <span>云盘</span>
+            <span>缓存</span>
         </button>
     </div>
     
@@ -117,7 +117,7 @@
             </form>
         </div>
         
-        <!-- Cloud Disk Tab -->
+        <!-- Cache Tab -->
         <div id="cloud" class="tab-content">
             <div class="cloud-editor">
                 <!-- Formatting Toolbar -->
@@ -152,7 +152,7 @@
                 </div>
                 
                 <!-- Rich Text Editor -->
-                <div class="cloud-content" contenteditable="true" id="cloud-editor" placeholder="在此输入文本内容，支持粘贴图片..."></div>
+                <div class="cloud-content" contenteditable="true" id="cloud-editor" placeholder="在此输入任意格式内容，支持粘贴图片、文件等...自动保存到本地"></div>
                 
                 <!-- Action Buttons -->
                 <div class="cloud-actions">
@@ -163,7 +163,7 @@
                     <button type="button" class="cloud-upload-btn" id="cloud-upload-btn">
                         📤 上传文件
                     </button>
-                    <input type="file" id="cloud-file-input" accept=".txt,.doc,.docx,.pdf,.xls,.xlsx,.ppt,.pptx" style="display: none;">
+                    <input type="file" id="cloud-file-input" style="display: none;" multiple>
                 </div>
             </div>
         </div>
