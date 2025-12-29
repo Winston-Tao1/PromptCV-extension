@@ -1052,17 +1052,18 @@ textarea.form-control {
 
 /* File and Image Thumbnails */
 .cloud-thumbnail {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
     background: var(--google-gray);
     border: 1px solid #DADCE0;
     border-radius: 6px;
-    margin: 4px;
-    max-width: 300px;
+    margin: 8px 0;
+    width: 100%;
+    max-width: 100%;
     position: relative;
-    vertical-align: middle;
+    box-sizing: border-box;
 }
 
 .cloud-thumbnail-icon {
@@ -1124,18 +1125,19 @@ textarea.form-control {
 
 /* Image Thumbnail */
 .cloud-image-thumbnail {
-    display: inline-block;
+    display: block;
     position: relative;
-    margin: 4px;
-    vertical-align: middle;
+    margin: 8px 0;
+    width: 100%;
 }
 
 .cloud-image-thumbnail img {
-    max-width: 150px;
-    max-height: 150px;
+    max-width: 100%;
+    max-height: 200px;
     border-radius: 6px;
     border: 1px solid #DADCE0;
     display: block;
+    box-sizing: border-box;
 }
 
 .cloud-image-remove {

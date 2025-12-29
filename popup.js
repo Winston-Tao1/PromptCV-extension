@@ -572,9 +572,8 @@ class PromptManager {
         // Color picker buttons
         this.initColorPickers(cloudEditor);
 
-        // Auto-save on input (with immediate save for delete actions)
+        // Auto-save on input (with immediate save for critical actions)
         cloudEditor.addEventListener('input', (e) => {
-            // Check if content was deleted (became empty)
             const content = cloudEditor.innerHTML.trim();
             const isEmpty = content === '' || content === '<br>' || content === '<div><br></div>';
             
@@ -597,8 +596,8 @@ class PromptManager {
                     document.execCommand('hiliteColor', false, bgColor);
                 }
             } else {
-                // Otherwise use normal auto-save with delay
-                this.scheduleAutoSave();
+                // For any non-empty input, use immediate save to prevent data loss
+                this.saveCacheData(false);
             }
         });
 
@@ -677,6 +676,18 @@ class PromptManager {
                 this.showToast('✓ 已保存到本地缓存');
             });
         }
+
+        // Force save on window close/refresh
+        window.addEventListener('beforeunload', (e) => {
+            // Get current editor content
+            const currentContent = cloudEditor.innerHTML.trim();
+            
+            // Check if content has changed
+            if (currentContent !== this.cacheData.content) {
+                // Save immediately without async/await to prevent blocking
+                this.saveCacheData(false);
+            }
+        });
     }
 
     // Schedule auto-save (automatic local save)
