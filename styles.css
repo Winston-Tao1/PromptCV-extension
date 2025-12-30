@@ -70,6 +70,60 @@ body {
     align-items: center;
     gap: 12px;
     margin-bottom: 6px;
+    position: relative;
+}
+
+/* Settings Button */
+.settings-btn {
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    position: relative;
+}
+
+.settings-btn::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, 
+        var(--google-blue), 
+        var(--google-red), 
+        var(--google-yellow), 
+        var(--google-green));
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.settings-btn:hover {
+    border-color: transparent;
+    transform: scale(1.1);
+}
+
+.settings-btn:hover::before {
+    opacity: 1;
+}
+
+.settings-btn img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+.settings-btn:active {
+    transform: scale(1.05);
 }
 
 .header-icon-wrapper {
@@ -810,9 +864,12 @@ textarea.form-control {
     padding: 16px 20px;
     border-top: 1px solid #E8EAED;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 }
 
+.edit-modal-polish,
 .edit-modal-save {
     background: white;
     color: var(--google-text);
@@ -827,6 +884,13 @@ textarea.form-control {
     position: relative;
 }
 
+.edit-modal-polish:disabled,
+.edit-modal-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.edit-modal-polish::before,
 .edit-modal-save::before {
     content: '';
     position: absolute;
@@ -844,6 +908,7 @@ textarea.form-control {
     z-index: -2;
 }
 
+.edit-modal-polish::after,
 .edit-modal-save::after {
     content: '';
     position: absolute;
@@ -853,18 +918,21 @@ textarea.form-control {
     z-index: -1;
 }
 
-.edit-modal-save:hover {
+.edit-modal-polish:hover:not(:disabled),
+.edit-modal-save:hover:not(:disabled) {
     border-color: transparent;
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);
 }
 
-.edit-modal-save:hover::before {
+.edit-modal-polish:hover:not(:disabled)::before,
+.edit-modal-save:hover:not(:disabled)::before {
     opacity: 1;
     animation: rainbowFlow 3s linear infinite;
 }
 
-.edit-modal-save:active {
+.edit-modal-polish:active:not(:disabled),
+.edit-modal-save:active:not(:disabled) {
     transform: translateY(0);
 }
 

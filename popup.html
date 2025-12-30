@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PromptCV - AI提示词管理器</title>
     <link rel="stylesheet" href="styles.css">
+    <script>
+        // CRITICAL: Check and redirect IMMEDIATELY before any rendering
+        (async function() {
+            try {
+                const result = await chrome.storage.local.get(['lastPage']);
+                if (result.lastPage === 'settings') {
+                    // Redirect immediately
+                    window.location.replace('settings.html');
+                }
+            } catch (error) {
+                console.error('Failed to check last page:', error);
+            }
+        })();
+    </script>
 </head>
 <body>
     <!-- Google Rainbow Border -->
@@ -19,6 +33,9 @@
             </div>
             <h1 id="app-title" class="editable-title" title="点击编辑">PromptCV</h1>
             <input type="file" id="logo-file-input" accept="image/*" style="display: none;">
+            <button class="settings-btn" id="settings-btn" title="设置">
+                <img src="icons/tabs_setting.png" alt="设置">
+            </button>
         </div>
         <div class="header-subtitle">专业AI提示词管理工具</div>
     </div>

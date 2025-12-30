@@ -75,6 +75,119 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getVersion') {
     sendResponse({ version: chrome.runtime.getManifest().version });
+    return true;
   }
+  
+  if (request.action === 'polishPrompt') {
+    // Handle AI polish prompt request
+    polishPromptWithAI(request.content, request.config)
+      .then(polishedContent => {
+        sendResponse({ success: true, polishedContent });
+      })
+      .catch(error => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep message channel open for async response
+  }
+  
   return true;
 });
+
+// Polish prompt with AI
+async function polishPromptWithAI(content, config) {
+  const { baseUrl, apiKey, modelName } = config;
+  
+  console.log('[AI Polish] Starting with config:', { baseUrl, modelName, apiKeyLength: apiKey?.length });
+  
+  if (!baseUrl || !apiKey || !modelName) {
+    throw new Error('模型配置不完整');
+  }
+  
+  try {
+    // Prepare the API request
+    const endpoint = baseUrl.endsWith('/') ? baseUrl + 'chat/completions' : baseUrl + '/chat/completions';
+    console.log('[AI Polish] Endpoint:', endpoint);
+    
+    const requestBody = {
+      model: modelName,
+      messages: [
+        {
+          role: 'system',
+          content: '你是一个专业的提示词优化助手。你的任务是优化用户提供的提示词，使其更加清晰、专业、有效。请保持原意的同时，改进措辞、结构和逻辑。'
+        },
+        {
+          role: 'user',
+          content: `请优化以下提示词，使其更加专业和有效：\n\n${content}`
+        }
+      ],
+      temperature: 0.7,
+      top_p: 0.9,
+      stream: false
+    };
+    
+    console.log('[AI Polish] Request body:', JSON.stringify(requestBody, null, 2));
+    
+    // Add timeout to fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    try {
+      // Make API request
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('[AI Polish] Response status:', response.status);
+      console.log('[AI Polish] Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[AI Polish] Error response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { message: errorText };
+        }
+        
+        throw new Error(errorData.error?.message || errorData.message || `API请求失败: ${response.status} ${response.statusText}`);
+      }
+      
+      const responseText = await response.text();
+      console.log('[AI Polish] Response text:', responseText);
+      
+      const data = JSON.parse(responseText);
+      console.log('[AI Polish] Parsed response:', JSON.stringify(data, null, 2));
+      
+      // Extract polished content from response
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        const polishedContent = data.choices[0].message.content.trim();
+        console.log('[AI Polish] Success! Polished content length:', polishedContent.length);
+        return polishedContent;
+      } else {
+        console.error('[AI Polish] Invalid response format:', data);
+        throw new Error('API返回格式错误');
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error('请求超时，请检查网络连接或稍后重试');
+      }
+      throw fetchError;
+    }
+    
+  } catch (error) {
+    console.error('[AI Polish] Failed:', error);
+    throw error;
+  }
+}

@@ -95,7 +95,7 @@
             <li>点击每个图标下方的"下载"按钮，或点击"下载全部图标"按钮</li>
             <li>将下载的图标文件保存到项目的 <code>icons/</code> 文件夹中</li>
             <li>确保文件名为: <code>icon16.png</code>, <code>icon32.png</code>, <code>icon48.png</code>, <code>icon128.png</code></li>
-            <li>图标已自动生成，包含Google彩虹配色和💡图标</li>
+            <li>图标已自动生成，包含Google彩虹配色和汉字"词"</li>
         </ol>
     </div>
 
@@ -151,31 +151,43 @@
             ctx.fillStyle = leftGradient;
             ctx.fillRect(0, 0, borderWidth, size);
             
-            // Draw lightbulb emoji (simplified representation)
+            // Draw Chinese character "词" in the center
             const centerX = size / 2;
             const centerY = size / 2;
-            const iconSize = size * 0.5;
             
-            // Draw a gradient circle for lightbulb effect
-            const bulbGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, iconSize);
-            bulbGradient.addColorStop(0, '#FFEB3B');
-            bulbGradient.addColorStop(0.7, '#FFC107');
-            bulbGradient.addColorStop(1, '#FF9800');
+            // Set font size based on icon size
+            const fontSize = size * 0.6;
+            ctx.font = `bold ${fontSize}px "Segoe UI", "Microsoft YaHei", Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             
-            ctx.fillStyle = bulbGradient;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY - iconSize * 0.1, iconSize * 0.4, 0, Math.PI * 2);
-            ctx.fill();
+            // Adjust vertical position to account for font metrics
+            // Chinese characters need slight vertical adjustment for perfect centering
+            const verticalAdjustment = size * 0.02;
+            const textY = centerY + verticalAdjustment;
             
-            // Draw base
-            ctx.fillStyle = '#90A4AE';
-            ctx.fillRect(centerX - iconSize * 0.2, centerY + iconSize * 0.2, iconSize * 0.4, iconSize * 0.3);
+            // Draw character with gradient fill
+            const charGradient = ctx.createLinearGradient(centerX - fontSize/2, centerY - fontSize/2, centerX + fontSize/2, centerY + fontSize/2);
+            charGradient.addColorStop(0, '#4285F4');
+            charGradient.addColorStop(0.33, '#EA4335');
+            charGradient.addColorStop(0.66, '#FBBC05');
+            charGradient.addColorStop(1, '#34A853');
             
-            // Add shine effect
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.beginPath();
-            ctx.arc(centerX - iconSize * 0.15, centerY - iconSize * 0.2, iconSize * 0.15, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle = charGradient;
+            ctx.fillText('词', centerX, textY);
+            
+            // Add subtle shadow for better visibility
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.fillText('词', centerX, textY);
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
         }
         
         // Download icon

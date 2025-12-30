@@ -1,6 +1,22 @@
 // PromptCV - Popup JavaScript
 // Professional prompt management with Chrome Storage sync
 
+// CRITICAL: Check if we should redirect to settings BEFORE initializing anything
+(async function() {
+    try {
+        const result = await chrome.storage.local.get(['lastPage']);
+        if (result.lastPage === 'settings') {
+            // Stop everything and redirect immediately
+            window.location.replace('settings.html');
+            throw new Error('Redirecting to settings'); // Stop execution
+        }
+    } catch (error) {
+        if (error.message !== 'Redirecting to settings') {
+            console.error('Failed to check last page:', error);
+        }
+    }
+})();
+
 class PromptManager {
     constructor() {
         this.prompts = [];
@@ -101,6 +117,64 @@ class PromptManager {
         const saveBtn = document.getElementById('save-btn');
         if (saveBtn) {
             saveBtn.addEventListener('click', () => this.addNewPrompt());
+        }
+
+        // Settings button
+        const settingsBtn = document.getElementById('settings-btn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', async () => {
+                // Save current state before navigating
+                this.saveSettingsPageState();
+                // Record that user is going to settings page
+                await chrome.storage.local.set({ lastPage: 'settings' });
+                window.location.href = 'settings.html';
+            });
+        }
+        
+        // Check if we need to restore to a specific tab
+        this.checkAndRestoreTab();
+    }
+
+    // Check and restore to specific tab if needed
+    async checkAndRestoreTab() {
+        try {
+            const result = await chrome.storage.local.get(['activeTab']);
+            const activeTab = result.activeTab;
+            
+            if (activeTab) {
+                // Restore the specific tab
+                this.switchTab(activeTab);
+                // Clear the activeTab record
+                await chrome.storage.local.remove('activeTab');
+            }
+        } catch (error) {
+            console.error('Failed to restore tab:', error);
+        }
+    }
+
+    // Save settings page state (form data and page position)
+    async saveSettingsPageState() {
+        try {
+            const settingsPageState = {
+                baseUrl: document.getElementById('base-url-input')?.value || '',
+                apiKey: document.getElementById('api-key-input')?.value || '',
+                modelName: document.getElementById('model-name-input')?.value || '',
+                configName: document.getElementById('config-name-input')?.value || '',
+                timestamp: new Date().toISOString()
+            };
+            
+            await chrome.storage.local.set({ settingsPageState });
+        } catch (error) {
+            console.error('Failed to save settings page state:', error);
+        }
+    }
+
+    // Clear settings page state (called after successful save)
+    async clearSettingsPageState() {
+        try {
+            await chrome.storage.local.remove('settingsPageState');
+        } catch (error) {
+            console.error('Failed to clear settings page state:', error);
         }
     }
 
@@ -374,6 +448,7 @@ class PromptManager {
                 </div>
                 <textarea class="edit-modal-textarea" placeholder="编辑提示词内容...">${this.escapeHtml(prompt.content)}</textarea>
                 <div class="edit-modal-footer">
+                    <button class="edit-modal-polish">✨ 提示词润色</button>
                     <button class="edit-modal-save">保存</button>
                 </div>
             </div>
@@ -396,6 +471,17 @@ class PromptManager {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 this.closeEditModal(overlay);
+            }
+        });
+        
+        // Polish button
+        overlay.querySelector('.edit-modal-polish').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const content = textarea.value.trim();
+            if (content) {
+                await this.polishPrompt(textarea);
+            } else {
+                this.showToast('内容不能为空');
             }
         });
         
@@ -422,6 +508,54 @@ class PromptManager {
         
         // Store handler for cleanup
         overlay._escHandler = escHandler;
+    }
+
+    // Polish prompt with AI
+    async polishPrompt(textarea) {
+        const originalContent = textarea.value.trim();
+        
+        // Check if AI model is configured
+        const result = await chrome.storage.local.get(['ai_model_configs']);
+        const configs = result.ai_model_configs || [];
+        const activeConfig = configs.find(c => c.active);
+        
+        if (!activeConfig) {
+            this.showToast('请先在设置中配置并启动AI模型');
+            return;
+        }
+        
+        // Disable textarea and show loading
+        textarea.disabled = true;
+        const polishBtn = document.querySelector('.edit-modal-polish');
+        const originalBtnText = polishBtn.textContent;
+        polishBtn.textContent = '⏳ 润色中...';
+        polishBtn.disabled = true;
+        
+        try {
+            // Send message to background script
+            const response = await chrome.runtime.sendMessage({
+                action: 'polishPrompt',
+                content: originalContent,
+                config: activeConfig
+            });
+            
+            if (response.success) {
+                // Update textarea with polished content
+                textarea.value = response.polishedContent;
+                this.showToast('✓ 润色完成');
+            } else {
+                this.showToast('润色失败: ' + response.error);
+            }
+        } catch (error) {
+            console.error('Polish prompt failed:', error);
+            this.showToast('润色失败: ' + error.message);
+        } finally {
+            // Re-enable textarea and button
+            textarea.disabled = false;
+            polishBtn.textContent = originalBtnText;
+            polishBtn.disabled = false;
+            textarea.focus();
+        }
     }
     
     // Close edit modal - FIXED animation timing
