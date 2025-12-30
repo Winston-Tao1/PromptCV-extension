@@ -76,7 +76,7 @@ body {
 /* Settings Button */
 .settings-btn {
     background: white;
-    border: 2px solid transparent;
+    border: 2px solid #DADCE0;
     border-radius: 8px;
     padding: 6px;
     cursor: pointer;
@@ -88,21 +88,22 @@ body {
     width: 32px;
     height: 32px;
     position: relative;
+    overflow: hidden;
 }
 
 .settings-btn::before {
     content: '';
     position: absolute;
-    inset: -2px;
+    inset: 0;
     background: linear-gradient(135deg, 
         var(--google-blue), 
         var(--google-red), 
         var(--google-yellow), 
         var(--google-green));
-    border-radius: 8px;
+    border-radius: 6px;
     opacity: 0;
     transition: opacity 0.3s ease;
-    z-index: -1;
+    z-index: 0;
 }
 
 .settings-btn:hover {
@@ -124,6 +125,7 @@ body {
 
 .settings-btn:active {
     transform: scale(1.05);
+    opacity: 0.8;
 }
 
 .header-icon-wrapper {
@@ -143,12 +145,30 @@ body {
 .header-icon {
     width: 28px;
     height: 28px;
-    background-image: url('icons/prompt_logo.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     display: block;
     transition: all var(--transition-fast);
+}
+
+/* Default placeholder when no logo is set */
+.header-icon[style*="none"] {
+    background-color: #F8F9FA;
+    border: 1px solid #DADCE0;
+    border-radius: 4px;
+    position: relative;
+}
+
+.header-icon[style*="none"]::after {
+    content: 'CV';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: #5F6368;
 }
 
 .header-icon-upload {
@@ -158,11 +178,11 @@ body {
     transform: translate(-50%, -50%);
     font-size: 14px;
     font-weight: bold;
-    color: var(--google-blue);
+    color: #EA4335;
     opacity: 0;
     transition: all var(--transition-fast);
     pointer-events: none;
-    background: rgba(255, 255, 255, 0.95);
+    background: transparent;
     width: 100%;
     height: 100%;
     display: flex;

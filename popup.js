@@ -38,6 +38,9 @@ class PromptManager {
     }
 
     async init() {
+        // Load logo FIRST to prevent flashing
+        await this.loadLogo();
+        
         await this.loadData();
         this.initEventListeners();
         this.initEditableTitle();
@@ -53,6 +56,26 @@ class PromptManager {
         
         // Restore color pickers
         this.restoreColorPickers();
+    }
+    
+    // Load logo from storage
+    async loadLogo() {
+        const headerIcon = document.getElementById('header-icon');
+        if (!headerIcon) return;
+        
+        try {
+            const result = await chrome.storage.local.get(['customLogo']);
+            if (result.customLogo) {
+                headerIcon.style.backgroundImage = `url('${result.customLogo}')`;
+            } else {
+                // No custom logo, clear the background image
+                headerIcon.style.backgroundImage = 'none';
+            }
+        } catch (error) {
+            console.error('Failed to load logo:', error);
+            // On error, also clear the background
+            headerIcon.style.backgroundImage = 'none';
+        }
     }
 
     // Load data from Chrome Storage (Sync for prompts/history, Local for cache)
@@ -514,10 +537,15 @@ class PromptManager {
     async polishPrompt(textarea) {
         const originalContent = textarea.value.trim();
         
+        console.log('[UI] Starting polish prompt process...');
+        
         // Check if AI model is configured
         const result = await chrome.storage.local.get(['ai_model_configs']);
         const configs = result.ai_model_configs || [];
         const activeConfig = configs.find(c => c.active);
+        
+        console.log('[UI] AI configs:', configs);
+        console.log('[UI] Active config:', activeConfig);
         
         if (!activeConfig) {
             this.showToast('请先在设置中配置并启动AI模型');
@@ -531,6 +559,10 @@ class PromptManager {
         polishBtn.textContent = '⏳ 润色中...';
         polishBtn.disabled = true;
         
+        console.log('[UI] Sending message to background script...');
+        console.log('[UI] Message content length:', originalContent.length);
+        console.log('[UI] Config:', activeConfig);
+        
         try {
             // Send message to background script
             const response = await chrome.runtime.sendMessage({
@@ -539,15 +571,24 @@ class PromptManager {
                 config: activeConfig
             });
             
+            console.log('[UI] Response received:', response);
+            
             if (response.success) {
                 // Update textarea with polished content
                 textarea.value = response.polishedContent;
                 this.showToast('✓ 润色完成');
+                console.log('[UI] Success! Polished content length:', response.polishedContent.length);
             } else {
                 this.showToast('润色失败: ' + response.error);
+                console.error('[UI] Error response:', response.error);
             }
         } catch (error) {
-            console.error('Polish prompt failed:', error);
+            console.error('[UI] Polish prompt failed:', error);
+            console.error('[UI] Error details:', {
+                message: error.message,
+                stack: error.stack,
+                type: error.constructor.name
+            });
             this.showToast('润色失败: ' + error.message);
         } finally {
             // Re-enable textarea and button
@@ -1072,16 +1113,6 @@ class PromptManager {
 
         if (!iconWrapper || !headerIcon || !logoFileInput) return;
 
-        // Load saved logo from local storage
-        try {
-            const result = await chrome.storage.local.get(['customLogo']);
-            if (result.customLogo) {
-                headerIcon.style.backgroundImage = `url('${result.customLogo}')`;
-            }
-        } catch (error) {
-            console.error('Failed to load custom logo:', error);
-        }
-
         // Click to upload
         iconWrapper.addEventListener('click', () => {
             logoFileInput.click();
@@ -1121,8 +1152,8 @@ class PromptManager {
                 } catch (error) {
                     console.error('Failed to save logo:', error);
                     this.showToast('保存失败：' + error.message);
-                    // Restore default logo
-                    headerIcon.style.backgroundImage = "url('icons/prompt_logo.png')";
+                    // Clear logo on error
+                    headerIcon.style.backgroundImage = 'none';
                 }
             };
 

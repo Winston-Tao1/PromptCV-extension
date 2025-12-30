@@ -1,17 +1,9 @@
-/* Google Rainbow Border */
-.rainbow-border {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, 
-        #4285F4 0%, 
-        #EA4335 25%, 
-        #FBBC05 50%, 
-        #34A853 75%, 
-        #4285F4 100%);
-    z-index: 1000;
+/* CSS Variables - Required for rainbow effects */
+:root {
+    --google-blue: #4285F4;
+    --google-red: #EA4335;
+    --google-yellow: #FBBC05;
+    --google-green: #34A853;
 }
 
 /* Base Styles - Match popup.html exactly */
@@ -77,7 +69,7 @@ body {
 
 .home-btn {
     background: white;
-    border: 2px solid transparent;
+    border: 2px solid #DADCE0;
     border-radius: 8px;
     padding: 6px;
     cursor: pointer;
@@ -88,21 +80,22 @@ body {
     width: 32px;
     height: 32px;
     position: relative;
+    overflow: hidden;
 }
 
 .home-btn::before {
     content: '';
     position: absolute;
-    inset: -2px;
+    inset: 0;
     background: linear-gradient(135deg, 
         var(--google-blue), 
         var(--google-red), 
         var(--google-yellow), 
         var(--google-green));
-    border-radius: 8px;
+    border-radius: 6px;
     opacity: 0;
     transition: opacity 0.3s ease;
-    z-index: -1;
+    z-index: 0;
 }
 
 .home-btn:hover {
@@ -124,6 +117,12 @@ body {
 
 .home-btn:active {
     transform: scale(1.05);
+    opacity: 0.8;
+}
+
+@keyframes rainbowFlow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
 }
 
 .header-subtitle {
