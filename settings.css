@@ -373,7 +373,7 @@ body {
 }
 
 .model-toggle.active {
-    background: linear-gradient(135deg, #4285F4, #34A853);
+    background: #34A853;
 }
 
 .model-toggle::after {

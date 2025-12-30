@@ -202,6 +202,11 @@ body {
     opacity: 1;
 }
 
+/* When logo has background image, hide upload arrow completely */
+.header-icon[style*="url"] ~ .header-icon-upload {
+    display: none !important;
+}
+
 .header h1 {
     font-size: 20px;
     font-weight: 500;

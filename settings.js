@@ -303,11 +303,17 @@ async function handleToggleModel(index) {
         const result = await chrome.storage.local.get([STORAGE_KEY]);
         const configs = result[STORAGE_KEY] || [];
         
+        // Toggle the selected model
+        const wasActive = configs[index].active;
+        
         // Deactivate all models
         configs.forEach(config => config.active = false);
         
-        // Activate selected model
-        configs[index].active = true;
+        // If it was active, deactivate it (don't reactivate)
+        // If it was inactive, activate it
+        if (!wasActive) {
+            configs[index].active = true;
+        }
         
         // Save to storage
         await chrome.storage.local.set({ [STORAGE_KEY]: configs });

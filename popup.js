@@ -1145,6 +1145,12 @@ class PromptManager {
                 // Update UI immediately
                 headerIcon.style.backgroundImage = `url('${logoData}')`;
 
+                // Hide upload arrow immediately after successful upload
+                const uploadArrow = headerIcon.querySelector('.header-icon-upload');
+                if (uploadArrow) {
+                    uploadArrow.style.display = 'none';
+                }
+
                 // Save to local storage (has larger size limit than sync)
                 try {
                     await chrome.storage.local.set({ customLogo: logoData });
@@ -1154,6 +1160,10 @@ class PromptManager {
                     this.showToast('保存失败：' + error.message);
                     // Clear logo on error
                     headerIcon.style.backgroundImage = 'none';
+                    // Show arrow again on error
+                    if (uploadArrow) {
+                        uploadArrow.style.display = 'block';
+                    }
                 }
             };
 
