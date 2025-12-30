@@ -36,6 +36,9 @@ body {
     color: var(--google-text, #202124);
     position: relative;
     background: white !important;
+    display: flex;
+    flex-direction: column;
+    height: 510px;
 }
 
 /* Header - Match popup exactly */
@@ -44,6 +47,7 @@ body {
     background: white;
     border-bottom: 1px solid #E8EAED;
     margin: 0;
+    flex-shrink: 0;
 }
 
 .header-title {
@@ -137,7 +141,7 @@ body {
     flex-direction: column;
     gap: 16px;
     padding: 16px;
-    height: calc(510px - 85px - 16px);
+    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -150,6 +154,7 @@ body {
     padding: 16px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
     border: 1px solid #E8EAED;
+    padding-bottom: 8px;
 }
 
 .panel-title {
@@ -297,6 +302,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    padding-bottom: 16px;
 }
 
 .model-card {
