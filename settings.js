@@ -170,7 +170,7 @@ async function loadModels() {
         }
     } catch (error) {
         console.error('Failed to load models:', error);
-        showNotification('加载模型配置失败', 'error');
+        // No notification for load error
     }
 }
 
@@ -202,8 +202,8 @@ function createModelCard(config, index) {
                 </button>
                 <button class="model-delete-btn" 
                         data-index="${index}"
-                        title="删除">
-                    🗑️ 删除
+                        style="margin-left: 4px;">
+                    删除
                 </button>
             </div>
         </div>
@@ -251,7 +251,7 @@ async function handleSaveConfig(e) {
     const configName = configNameInput.value.trim();
     
     if (!baseUrl || !apiKey || !modelName) {
-        showNotification('请填写所有必填项', 'error');
+        // Silent validation - no notification
         return;
     }
     
@@ -261,7 +261,7 @@ async function handleSaveConfig(e) {
         
         // Check max models limit
         if (configs.length >= MAX_MODELS) {
-            showNotification(`最多只能配置 ${MAX_MODELS} 个模型`, 'error');
+            // Silent limit check - no notification
             return;
         }
         
@@ -290,10 +290,10 @@ async function handleSaveConfig(e) {
         // Reload models
         await loadModels();
         
-        showNotification('模型配置已保存', 'success');
+        // No notification for success
     } catch (error) {
         console.error('Failed to save config:', error);
-        showNotification('保存失败: ' + error.message, 'error');
+        // No notification for error
     }
 }
 
@@ -315,10 +315,10 @@ async function handleToggleModel(index) {
         // Reload models
         await loadModels();
         
-        showNotification(`已启动: ${configs[index].name || '模型 ' + (index + 1)}`, 'success');
+        // No notification for toggle
     } catch (error) {
         console.error('Failed to toggle model:', error);
-        showNotification('切换失败: ' + error.message, 'error');
+        // No notification for error
     }
 }
 
@@ -341,10 +341,10 @@ async function handleDeleteModel(index) {
         // Reload models
         await loadModels();
         
-        showNotification('模型配置已删除', 'success');
+        // No notification for delete
     } catch (error) {
         console.error('Failed to delete model:', error);
-        showNotification('删除失败: ' + error.message, 'error');
+        // No notification for error
     }
 }
 
