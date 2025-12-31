@@ -1429,9 +1429,10 @@ class PromptManager {
         if (bgColorBtn && this.uiState.bgColor) {
             const preview = bgColorBtn.querySelector('.color-preview');
             if (preview) {
-                // For background color: show the color with "A" letter
+                // For background color: show pure color button without text
                 preview.style.background = this.uiState.bgColor;
-                preview.textContent = 'A';
+                preview.textContent = '';
+                preview.style.color = 'transparent';
                 if (this.uiState.bgColor === '#FFFFFF') {
                     preview.style.border = '1px solid #DADCE0';
                 } else {
