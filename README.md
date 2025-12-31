@@ -125,7 +125,7 @@ Status: 激活/关闭状态
 ```
 
 #### 💡 获取API
-推荐访问 **胜算云平台** (https://www.shengsuanyun.com/?from=CH_6QLLV1BO)
+推荐访问 **胜算云平台** ([https://www.shengsuanyun.com/?from=CH_6QLLV1BO])
 - 注册账号获取API Key
 - 支持多种主流AI模型
 - 提供完整的API文档
