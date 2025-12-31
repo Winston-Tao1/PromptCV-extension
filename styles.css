@@ -584,36 +584,42 @@ body {
     transform: scale(0.98);
 }
 
-/* Add Form */
+/* Add Form - Balanced size */
 .add-prompt-form {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     height: 100%;
     position: relative;
+    margin-top: -8px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     flex: 1;
 }
 
+/* Remove extra space at the top of add form */
+#add .form-group:first-child {
+    margin-top: 0;
+}
+
 .form-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--google-text);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .form-control {
-    padding: 12px 14px;
+    padding: 10px 12px;
     border: 1px solid #DADCE0;
-    border-radius: 8px;
-    font-size: 14px;
+    border-radius: 6px;
+    font-size: 13px;
     font-family: inherit;
     transition: all var(--transition-fast);
     background-color: white;
@@ -626,7 +632,7 @@ body {
 .form-control:focus {
     outline: none;
     border-color: var(--google-blue);
-    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1);
 }
 
 select.form-control {
@@ -638,31 +644,31 @@ select.form-control {
     padding-right: 32px;
 }
 
-/* Tag Cloud Container */
+/* Tag Cloud Container - Balanced size */
 .tag-cloud-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 16px;
+    gap: 6px;
+    padding: 10px;
     background: linear-gradient(135deg, #F8F9FA 0%, #E8EAED 100%);
     border: 1px solid #DADCE0;
-    border-radius: 12px;
-    min-height: 120px;
+    border-radius: 8px;
+    min-height: 70px;
     align-content: flex-start;
 }
 
-/* Tag Cloud Button */
+/* Tag Cloud Button - Balanced size */
 .tag-cloud-btn {
-    padding: 8px 16px;
-    border: 2px solid transparent;
-    border-radius: 20px;
-    font-size: 13px;
+    padding: 5px 10px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    font-size: 10px;
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-fast);
     background: white;
     color: var(--google-text);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     position: relative;
     overflow: hidden;
 }
@@ -730,15 +736,15 @@ select.form-control {
 
 /* Hover effect */
 .tag-cloud-btn:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     border-color: currentColor;
 }
 
 /* Active/Selected state */
 .tag-cloud-btn.selected {
     border-color: currentColor;
-    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
     transform: scale(1.05);
     font-weight: 600;
 }
@@ -749,32 +755,31 @@ select.form-control {
 }
 
 textarea.form-control {
-    min-height: 180px;
+    min-height: 160px;
     resize: vertical;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     line-height: 1.6;
-    padding: 12px 14px;
+    padding: 10px 12px;
+    font-size: 13px;
 }
 
-/* Save button - positioned at bottom */
+/* Save button - Balanced size */
 .save-btn {
     background: white;
     color: var(--google-text);
     border: 2px solid #DADCE0;
-    border-radius: 8px;
-    padding: 14px 18px;
-    font-size: 14px;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-normal);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     box-shadow: var(--shadow-sm);
-    position: sticky;
-    bottom: 0;
-    margin-top: auto;
+    margin-top: 8px;
 }
 
 .save-btn::before {
@@ -788,7 +793,7 @@ textarea.form-control {
         var(--google-green) 75%, 
         var(--google-blue) 100%);
     background-size: 200% 100%;
-    border-radius: 8px;
+    border-radius: 6px;
     opacity: 0;
     transition: opacity 0.3s ease;
     z-index: -2;
@@ -815,8 +820,8 @@ textarea.form-control {
 }
 
 .save-btn-icon {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     display: block;
     position: relative;
     z-index: 0;
