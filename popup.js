@@ -998,6 +998,7 @@ class PromptManager {
         thumbnail.className = 'cloud-thumbnail';
         thumbnail.contentEditable = 'false';
         thumbnail.setAttribute('data-file', JSON.stringify(fileData));
+        thumbnail.setAttribute('tabindex', '0'); // 添加tabindex使其可聚焦
 
         const icon = this.getFileIcon(fileData.ext);
         
@@ -1007,7 +1008,7 @@ class PromptManager {
                 <span class="cloud-thumbnail-name">${this.escapeHtml(fileData.name)}</span>
                 <span class="cloud-thumbnail-size">${fileData.size}</span>
             </span>
-            <button class="cloud-thumbnail-remove" type="button">×</button>
+            <button class="cloud-thumbnail-remove" type="button" title="删除文件">×</button>
         `;
 
         // Remove button
@@ -1027,6 +1028,7 @@ class PromptManager {
         const container = document.createElement('span');
         container.className = 'cloud-image-thumbnail';
         container.contentEditable = 'false';
+        container.setAttribute('tabindex', '0'); // 添加tabindex使其可聚焦
 
         const img = document.createElement('img');
         img.src = src;
@@ -1035,6 +1037,7 @@ class PromptManager {
         removeBtn.className = 'cloud-image-remove';
         removeBtn.type = 'button';
         removeBtn.textContent = '×';
+        removeBtn.setAttribute('title', '删除图片'); // 添加标题
         
         removeBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1326,14 +1329,25 @@ class PromptManager {
         // This ensures the color is ready when focus/input events fire
         btn.setAttribute('data-current-color', color);
         
-        // Update color preview
+        // Update color preview based on command type
         const preview = btn.querySelector('.color-preview');
         if (preview) {
-            preview.style.background = color;
-            if (color === 'transparent' || color === '#FFFFFF') {
+            if (command === 'foreColor') {
+                // For font color: show white background with colored "A" letter
+                preview.style.background = 'white';
                 preview.style.border = '1px solid #DADCE0';
-            } else {
-                preview.style.border = 'none';
+                preview.style.color = color;
+                preview.textContent = 'A';
+            } else if (command === 'hiliteColor') {
+                // For background color: show pure color button without text
+                preview.style.background = color;
+                preview.textContent = '';
+                preview.style.color = 'transparent';
+                if (color === 'transparent' || color === '#FFFFFF') {
+                    preview.style.border = '1px solid #DADCE0';
+                } else {
+                    preview.style.border = 'none';
+                }
             }
         }
         
@@ -1401,10 +1415,11 @@ class PromptManager {
         if (fontColorBtn && this.uiState.fontColor) {
             const preview = fontColorBtn.querySelector('.color-preview');
             if (preview) {
-                preview.style.background = this.uiState.fontColor;
-                if (this.uiState.fontColor === '#FFFFFF') {
-                    preview.style.border = '1px solid #DADCE0';
-                }
+                // For font color: show white background with colored "A" letter
+                preview.style.background = 'white';
+                preview.style.border = '1px solid #DADCE0';
+                preview.style.color = this.uiState.fontColor;
+                preview.textContent = 'A';
             }
             fontColorBtn.setAttribute('data-current-color', this.uiState.fontColor);
         }
@@ -1414,9 +1429,13 @@ class PromptManager {
         if (bgColorBtn && this.uiState.bgColor) {
             const preview = bgColorBtn.querySelector('.color-preview');
             if (preview) {
+                // For background color: show the color with "A" letter
                 preview.style.background = this.uiState.bgColor;
+                preview.textContent = 'A';
                 if (this.uiState.bgColor === '#FFFFFF') {
                     preview.style.border = '1px solid #DADCE0';
+                } else {
+                    preview.style.border = 'none';
                 }
             }
             bgColorBtn.setAttribute('data-current-color', this.uiState.bgColor);
