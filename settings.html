@@ -40,7 +40,22 @@
     
     <!-- Main Content -->
     <div class="settings-container">
-        <!-- Left Panel: Configuration Form -->
+        <!-- Top Panel: Model List -->
+        <div class="model-panel">
+            <h2 class="panel-title">已配置的模型</h2>
+            
+            <div id="model-list" class="model-list">
+                <!-- Models will be dynamically added here -->
+            </div>
+            
+            <div id="model-empty" class="empty-state">
+                <div class="empty-icon">🤖</div>
+                <h3>暂无配置</h3>
+                <p>请在下方配置您的第一个AI模型<br>最多可以配置5个模型</p>
+            </div>
+        </div>
+        
+        <!-- Bottom Panel: Configuration Form -->
         <div class="config-panel">
             <h2 class="panel-title">模型配置</h2>
             
@@ -112,21 +127,6 @@
                     <span>保存配置</span>
                 </button>
             </form>
-        </div>
-        
-        <!-- Right Panel: Model List -->
-        <div class="model-panel">
-            <h2 class="panel-title">已配置的模型</h2>
-            
-            <div id="model-list" class="model-list">
-                <!-- Models will be dynamically added here -->
-            </div>
-            
-            <div id="model-empty" class="empty-state">
-                <div class="empty-icon">🤖</div>
-                <h3>暂无配置</h3>
-                <p>请在左侧配置您的第一个AI模型<br>最多可以配置5个模型</p>
-            </div>
         </div>
     </div>
     
