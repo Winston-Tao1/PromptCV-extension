@@ -136,6 +136,9 @@ class PromptManager {
             });
         });
 
+        // Tag cloud buttons
+        this.initTagCloudButtons();
+
         // Save button in add form
         const saveBtn = document.getElementById('save-btn');
         if (saveBtn) {
@@ -298,10 +301,22 @@ class PromptManager {
         
         const escapedPreview = this.escapeHtml(preview);
         
+        // Handle both old (app) and new (tags) data structures
+        let tagsHtml = '';
+        if (prompt.tags && Array.isArray(prompt.tags)) {
+            // New structure: display up to 3 tags
+            tagsHtml = prompt.tags.slice(0, 3).map(tag => 
+                `<span class="tag-badge" data-tag="${this.escapeHtml(tag)}">${this.escapeHtml(tag)}</span>`
+            ).join('');
+        } else if (prompt.app) {
+            // Old structure: convert to single tag for backward compatibility
+            tagsHtml = `<span class="tag-badge" data-tag="${prompt.app}">${this.getAppName(prompt.app)}</span>`;
+        }
+        
         return `
             <div class="prompt-card" data-id="${prompt.id}">
                 <div class="card-header">
-                    <span class="app-badge ${prompt.app}">${this.getAppName(prompt.app)}</span>
+                    <div class="card-tags">${tagsHtml}</div>
                     <button class="favorite-btn ${prompt.isFavorite ? 'favorited' : ''}" data-action="toggle-favorite" title="${prompt.isFavorite ? '取消收藏' : '收藏'}">
                     </button>
                 </div>
@@ -318,13 +333,47 @@ class PromptManager {
         `;
     }
 
+    // Initialize tag cloud buttons
+    initTagCloudButtons() {
+        const tagButtons = document.querySelectorAll('.tag-cloud-btn');
+        const selectedTags = [];
+        
+        tagButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tag = btn.getAttribute('data-tag');
+                
+                if (btn.classList.contains('selected')) {
+                    // Deselect tag
+                    btn.classList.remove('selected');
+                    const index = selectedTags.indexOf(tag);
+                    if (index > -1) {
+                        selectedTags.splice(index, 1);
+                    }
+                } else {
+                    // Check if already have 3 tags selected
+                    if (selectedTags.length >= 3) {
+                        this.showToast('最多只能选择3个标签');
+                        return;
+                    }
+                    
+                    // Select tag
+                    btn.classList.add('selected');
+                    selectedTags.push(tag);
+                }
+            });
+        });
+        
+        // Store reference for later use
+        this.selectedTags = selectedTags;
+    }
+
     // Add new prompt
     async addNewPrompt() {
-        const appSelect = document.getElementById('app-select');
         const promptContent = document.getElementById('prompt-content');
         
-        if (!appSelect.value) {
-            this.showToast('请选择应用');
+        // Check if at least one tag is selected
+        if (!this.selectedTags || this.selectedTags.length === 0) {
+            this.showToast('请至少选择一个标签');
             return;
         }
         
@@ -335,7 +384,7 @@ class PromptManager {
         
         const newPrompt = {
             id: Date.now().toString(),
-            app: appSelect.value,
+            tags: [...this.selectedTags], // Store selected tags array
             content: promptContent.value.trim(),
             isFavorite: false,
             createdAt: new Date().toISOString()
@@ -356,7 +405,12 @@ class PromptManager {
         
         // Clear form
         promptContent.value = '';
-        appSelect.value = '';
+        
+        // Clear selected tags
+        document.querySelectorAll('.tag-cloud-btn.selected').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        this.selectedTags.length = 0;
         
         // Switch to all tab to show the new prompt
         this.switchTab('all');

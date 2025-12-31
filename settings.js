@@ -209,15 +209,15 @@ function createModelCard(config, index) {
         </div>
         <div class="model-card-info">
             <div class="model-info-item">
-                <span class="model-info-label">🌐 Base URL:</span>
+                <span class="model-info-label"> Base URL:</span>
                 <span class="model-info-value">${config.baseUrl}</span>
             </div>
             <div class="model-info-item">
-                <span class="model-info-label">🔑 API Key:</span>
+                <span class="model-info-label"> API Key:</span>
                 <span class="model-info-value">${maskedApiKey}</span>
             </div>
             <div class="model-info-item">
-                <span class="model-info-label">🎯 Model:</span>
+                <span class="model-info-label"> Model:</span>
                 <span class="model-info-value">${config.modelName}</span>
             </div>
         </div>

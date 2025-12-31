@@ -367,11 +367,99 @@ body {
 .card-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 10px;
+    gap: 8px;
 }
 
-/* App badge with logo */
+/* Card tags container */
+.card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+    align-items: center;
+}
+
+/* Tag badge in cards */
+.tag-badge {
+    background-color: #F8F9FA;
+    color: var(--google-text);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 10px;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+/* Color variations for different tags */
+.tag-badge[data-tag="代码编程"] {
+    background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+    color: #1976D2;
+}
+
+.tag-badge[data-tag="内容创作"] {
+    background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+    color: #7B1FA2;
+}
+
+.tag-badge[data-tag="学习研究"] {
+    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+    color: #388E3C;
+}
+
+.tag-badge[data-tag="工作办公"] {
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    color: #F57C00;
+}
+
+.tag-badge[data-tag="生活娱乐"] {
+    background: linear-gradient(135deg, #FCE4EC, #F8BBD0);
+    color: #C2185B;
+}
+
+.tag-badge[data-tag="专业领域"] {
+    background: linear-gradient(135deg, #E0F2F1, #B2DFDB);
+    color: #00796B;
+}
+
+.tag-badge[data-tag="DeepSeek"],
+.tag-badge[data-tag="deepseek"] {
+    background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+    color: #6A1B9A;
+}
+
+.tag-badge[data-tag="ChatGPT"],
+.tag-badge[data-tag="chatgpt"] {
+    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+    color: #2E7D32;
+}
+
+.tag-badge[data-tag="Grok"],
+.tag-badge[data-tag="grok"] {
+    background: linear-gradient(135deg, #E1F5FE, #B3E5FC);
+    color: #0277BD;
+}
+
+.tag-badge[data-tag="Gemini"],
+.tag-badge[data-tag="gemini"] {
+    background: linear-gradient(135deg, #FFF9C4, #FFF59D);
+    color: #F57F17;
+}
+
+.tag-badge[data-tag="豆包"] {
+    background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+    color: #C62828;
+}
+
+.tag-badge[data-tag="Claude"],
+.tag-badge[data-tag="claude"] {
+    background: linear-gradient(135deg, #FBE9E7, #FFCCBC);
+    color: #D84315;
+}
+
+/* Backward compatibility: Keep old app-badge styles for old data */
 .app-badge {
     background-color: #F8F9FA;
     color: var(--google-text);
@@ -529,48 +617,6 @@ body {
     font-family: inherit;
     transition: all var(--transition-fast);
     background-color: white;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235F6368' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 32px;
-}
-
-/* Custom select with logos */
-.form-control option {
-    padding: 10px 10px 10px 34px;
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    background-position: 10px center;
-}
-
-.form-control option[value="deepseek"] {
-    background-image: url('icons/deepseek.png');
-}
-
-.form-control option[value="chatgpt"] {
-    background-image: url('icons/chatgpt.png');
-}
-
-.form-control option[value="gemini"] {
-    background-image: url('icons/gemini.png');
-}
-
-.form-control option[value="grok"] {
-    background-image: url('icons/grok.png');
-}
-
-.form-control option[value="claude"] {
-    background-image: url('icons/claude.png');
-}
-
-.form-control option[value="other"] {
-    background-image: url('icons/otherAI.png');
-}
-
-.form-control option[value=""] {
-    background-image: none;
-    padding-left: 10px;
 }
 
 .form-control:hover {
@@ -585,6 +631,121 @@ body {
 
 select.form-control {
     cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235F6368' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
+
+/* Tag Cloud Container */
+.tag-cloud-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px;
+    background: linear-gradient(135deg, #F8F9FA 0%, #E8EAED 100%);
+    border: 1px solid #DADCE0;
+    border-radius: 12px;
+    min-height: 120px;
+    align-content: flex-start;
+}
+
+/* Tag Cloud Button */
+.tag-cloud-btn {
+    padding: 8px 16px;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: white;
+    color: var(--google-text);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Different colors for each tag */
+.tag-cloud-btn[data-tag="代码编程"] {
+    background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+    color: #1976D2;
+}
+
+.tag-cloud-btn[data-tag="内容创作"] {
+    background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+    color: #7B1FA2;
+}
+
+.tag-cloud-btn[data-tag="学习研究"] {
+    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+    color: #388E3C;
+}
+
+.tag-cloud-btn[data-tag="工作办公"] {
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    color: #F57C00;
+}
+
+.tag-cloud-btn[data-tag="生活娱乐"] {
+    background: linear-gradient(135deg, #FCE4EC, #F8BBD0);
+    color: #C2185B;
+}
+
+.tag-cloud-btn[data-tag="专业领域"] {
+    background: linear-gradient(135deg, #E0F2F1, #B2DFDB);
+    color: #00796B;
+}
+
+.tag-cloud-btn[data-tag="DeepSeek"] {
+    background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+    color: #6A1B9A;
+}
+
+.tag-cloud-btn[data-tag="ChatGPT"] {
+    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+    color: #2E7D32;
+}
+
+.tag-cloud-btn[data-tag="Grok"] {
+    background: linear-gradient(135deg, #E1F5FE, #B3E5FC);
+    color: #0277BD;
+}
+
+.tag-cloud-btn[data-tag="Gemini"] {
+    background: linear-gradient(135deg, #FFF9C4, #FFF59D);
+    color: #F57F17;
+}
+
+.tag-cloud-btn[data-tag="豆包"] {
+    background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+    color: #C62828;
+}
+
+.tag-cloud-btn[data-tag="Claude"] {
+    background: linear-gradient(135deg, #FBE9E7, #FFCCBC);
+    color: #D84315;
+}
+
+/* Hover effect */
+.tag-cloud-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: currentColor;
+}
+
+/* Active/Selected state */
+.tag-cloud-btn.selected {
+    border-color: currentColor;
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+    transform: scale(1.05);
+    font-weight: 600;
+}
+
+/* Active state animation */
+.tag-cloud-btn:active {
+    transform: scale(0.98);
 }
 
 textarea.form-control {

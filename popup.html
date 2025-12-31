@@ -89,18 +89,23 @@
             <form class="add-prompt-form" id="add-prompt-form">
                 <div class="form-group">
                     <label class="form-label">
-                        <span>🖥️</span>
-                        <span>标签</span>
+                        <span>🏷️</span>
+                        <span>标签（最多选择3个）</span>
                     </label>
-                    <select class="form-control" id="app-select" required>
-                        <option value="">请选择提示词对应标签</option>
-                        <option value="deepseek" data-logo="icons/deepseek.png">DeepSeek</option>
-                        <option value="chatgpt" data-logo="icons/chatgpt.png">ChatGPT</option>
-                        <option value="gemini" data-logo="icons/gemini.png">Gemini</option>
-                        <option value="grok" data-logo="icons/grok.png">Grok</option>
-                        <option value="claude" data-logo="icons/claude.png">Claude</option>
-                        <option value="other" data-logo="icons/otherAI.png">其他应用</option>
-                    </select>
+                    <div class="tag-cloud-container" id="tag-cloud-container">
+                        <button type="button" class="tag-cloud-btn" data-tag="代码编程">代码编程</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="内容创作">内容创作</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="学习研究">学习研究</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="工作办公">工作办公</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="生活娱乐">生活娱乐</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="专业领域">专业领域</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="DeepSeek">DeepSeek</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="ChatGPT">ChatGPT</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="Grok">Grok</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="Gemini">Gemini</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="豆包">豆包</button>
+                        <button type="button" class="tag-cloud-btn" data-tag="Claude">Claude</button>
+                    </div>
                 </div>
                 
                 <div class="form-group">
