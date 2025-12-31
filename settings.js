@@ -330,7 +330,10 @@ async function handleToggleModel(index) {
 
 // Handle Delete Model
 async function handleDeleteModel(index) {
-    if (!confirm('确定要删除这个模型配置吗？')) {
+    // Use new confirmation window instead of browser confirm
+    const confirmed = await showDeleteModelConfirm();
+    
+    if (!confirmed) {
         return;
     }
     
@@ -352,6 +355,72 @@ async function handleDeleteModel(index) {
         console.error('Failed to delete model:', error);
         // No notification for error
     }
+}
+
+// Show delete confirmation window for model
+function showDeleteModelConfirm() {
+    return new Promise((resolve) => {
+        // Create modal overlay - EXACTLY LIKE delete_confirm_modal.html
+        const overlay = document.createElement('div');
+        overlay.className = 'delete-modal-overlay';
+        
+        // Create modal content with same structure as popup.js
+        overlay.innerHTML = `
+            <div class="delete-modal">
+                <div class="delete-modal-header">
+                    <h3>确认删除</h3>
+                </div>
+                <div class="delete-modal-body">
+                    <p>是否确认删除本模型？</p>
+                    <p class="delete-warning">删除后将无法恢复。</p>
+                </div>
+                <div class="delete-modal-footer">
+                    <button class="btn-cancel">取消</button>
+                    <button class="btn-delete">删除</button>
+                </div>
+            </div>
+        `;
+        
+        // Add to body
+        document.body.appendChild(overlay);
+        
+        // Get buttons
+        const cancelBtn = overlay.querySelector('.btn-cancel');
+        const deleteBtn = overlay.querySelector('.btn-delete');
+        
+        // Handle cancel
+        cancelBtn.addEventListener('click', () => {
+            overlay.remove();
+            resolve(false);
+        });
+        
+        // Handle delete
+        deleteBtn.addEventListener('click', () => {
+            overlay.remove();
+            resolve(true);
+        });
+        
+        // Handle click outside
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                resolve(false);
+            }
+        });
+        
+        // Handle Escape key
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                overlay.remove();
+                resolve(false);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+        
+        // Focus delete button
+        deleteBtn.focus();
+    });
 }
 
 // Show Notification

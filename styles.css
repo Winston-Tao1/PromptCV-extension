@@ -1034,11 +1034,11 @@ textarea.form-control {
     min-height: 24px;
 }
 
-/* Style adjustments for tags in edit modal */
+/* Style adjustments for tags in edit modal - Match card tags */
 .edit-modal-header .tag-badge {
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 8px;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
 }
 
 .edit-modal-header .app-badge {
@@ -1595,18 +1595,14 @@ textarea.form-control {
     gap: 4px;
 }
 
-/* Menu button (...) */
+/* Menu button (3 dots icon) */
 .menu-btn {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 4px 8px;
-    font-size: 16px;
-    font-weight: bold;
-    color: #5F6368;
+    padding: 2px;
     border-radius: 4px;
     transition: all var(--transition-fast);
-    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1616,7 +1612,6 @@ textarea.form-control {
 
 .menu-btn:hover {
     background-color: var(--google-gray);
-    color: var(--google-text);
     transform: scale(1.1);
 }
 
@@ -1624,29 +1619,39 @@ textarea.form-control {
     transform: scale(0.95);
 }
 
-/* Context Menu */
+.menu-btn img {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+/* Context Menu - Ultra compact for icons only */
 .context-menu {
     position: fixed;
     background: white;
     border: 1px solid #DADCE0;
-    border-radius: 8px;
+    border-radius: 6px;
     box-shadow: var(--shadow-lg);
     z-index: 10002;
-    min-width: 140px;
+    width: 50px;  /* Fixed width for 3 icons */
     overflow: hidden;
     animation: fadeIn 0.15s ease-out;
+    display: flex;
+    flex-direction: column;
 }
 
 .context-menu-item {
-    padding: 10px 14px;
+    padding: 6px 0;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 16px;  /* Larger emoji */
     color: var(--google-text);
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
     transition: all var(--transition-fast);
     border-bottom: 1px solid #F8F9FA;
+    min-height: 36px;
+    line-height: 1;
 }
 
 .context-menu-item:last-child {
@@ -1655,6 +1660,7 @@ textarea.form-control {
 
 .context-menu-item:hover {
     background-color: var(--google-gray);
+    transform: scale(1.05);
 }
 
 .context-menu-item.delete {
@@ -1663,6 +1669,7 @@ textarea.form-control {
 
 .context-menu-item.delete:hover {
     background-color: #FFEBEE;
+    transform: scale(1.1);
 }
 
 /* Update card header to accommodate new actions */
@@ -1737,7 +1744,7 @@ textarea.form-control {
     background: white;
     border-radius: 12px;
     width: 90%;
-    max-width: 360px;
+    max-width: 320px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: scaleIn 0.2s ease;
     border: 1px solid #E8EAED;
@@ -1746,40 +1753,29 @@ textarea.form-control {
 .delete-modal-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 20px 24px 16px;
+    justify-content: center;
+    padding: 16px 20px 12px;
     border-bottom: 1px solid #E8EAED;
 }
 
-.delete-icon {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #EA4335, #FF6B6B);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 18px;
-}
-
 .delete-modal-header h3 {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #202124;
     margin: 0;
+    text-align: center;
 }
 
 .delete-modal-body {
-    padding: 16px 24px;
+    padding: 12px 20px;
     color: #5F6368;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
 }
 
 .delete-modal-body p {
-    margin: 0 0 8px 0;
+    margin: 0 0 6px 0;
 }
 
 .delete-warning {
@@ -1788,7 +1784,7 @@ textarea.form-control {
 }
 
 .delete-modal-footer {
-    padding: 16px 24px 20px;
+    padding: 12px 20px 16px;
     border-top: 1px solid #E8EAED;
     display: flex;
     gap: 8px;
@@ -1796,9 +1792,9 @@ textarea.form-control {
 }
 
 .btn-cancel, .btn-delete {
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);

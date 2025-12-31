@@ -320,7 +320,9 @@ class PromptManager {
                     <div class="card-actions">
                         <button class="favorite-btn ${prompt.isFavorite ? 'favorited' : ''}" data-action="toggle-favorite" title="${prompt.isFavorite ? '取消收藏' : '收藏'}">
                         </button>
-                        <button class="menu-btn" data-action="menu" title="更多操作">...</button>
+                        <button class="menu-btn" data-action="menu" title="更多操作">
+                            <img src="icons/3dots.png" alt="更多" style="width: 16px; height: 16px;">
+                        </button>
                     </div>
                 </div>
                 <div class="prompt-preview">
@@ -682,7 +684,7 @@ class PromptManager {
             if (response.success) {
                 // Update textarea with polished content
                 textarea.value = response.polishedContent;
-                this.showToast('✓ 润色完成');
+                this.showToast('润色完成');
                 console.log('[UI] Success! Polished content length:', response.polishedContent.length);
             } else {
                 this.showToast('润色失败: ' + response.error);
@@ -1568,7 +1570,7 @@ class PromptManager {
                 <span>${prompt.isFavorite ? '⭐' : '☆'}</span>
             </div>
             <div class="context-menu-item delete" data-action="delete">
-                <span>🗑️</span>
+                <span>⛔</span>
             </div>
         `;
 
@@ -1643,7 +1645,6 @@ class PromptManager {
             overlay.innerHTML = `
                 <div class="delete-modal">
                     <div class="delete-modal-header">
-                        <div class="delete-icon">⚠️</div>
                         <h3>确认删除</h3>
                     </div>
                     <div class="delete-modal-body">
