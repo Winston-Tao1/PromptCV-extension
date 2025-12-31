@@ -125,7 +125,7 @@ Status: 激活/关闭状态
 ```
 
 #### 💡 获取API
-推荐访问 **胜算云平台** ([https://www.shengsuanyun.com/?from=CH_6QLLV1BO])
+推荐访问 **[胜算云平台](https://www.shengsuanyun.com/?from=CH_6QLLV1BO)**
 - 注册账号获取API Key
 - 支持多种主流AI模型
 - 提供完整的API文档
@@ -155,7 +155,7 @@ Status: 激活/关闭状态
 
 #### 添加模型
 1. 点击右上角"⚙️ 设置"
-2. 填写API信息（从胜算云平台获取）
+2. 填写API信息（从 **[胜算云平台](https://www.shengsuanyun.com/?from=CH_6QLLV1BO)** 获取）
 3. 点击"保存配置"
 4. 点击灰色开关激活模型
 
@@ -263,8 +263,7 @@ Status: 激活/关闭状态
 - 无限制！
 
 ### Q: 如何获取API Key？
-**A:** 推荐胜算云平台
-- 访问 shengsuanyun.com
+**A:** 推荐 **[胜算云平台](https://www.shengsuanyun.com/?from=CH_6QLLV1BO)**
 - 注册账号
 - 在控制台获取API Key
 
