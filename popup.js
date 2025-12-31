@@ -592,6 +592,9 @@ class PromptManager {
         textarea.focus();
         textarea.setSelectionRange(textarea.value.length, textarea.value.length);
         
+        // Store prompt ID for database lookup
+        overlay._promptId = prompt.id;
+        
         // Close button
         overlay.querySelector('.edit-modal-close').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -608,11 +611,12 @@ class PromptManager {
         // Polish button
         overlay.querySelector('.edit-modal-polish').addEventListener('click', async (e) => {
             e.stopPropagation();
-            const content = textarea.value.trim();
-            if (content) {
-                await this.polishPrompt(textarea);
+            // Always use the saved content from database for polishing
+            const savedPrompt = this.prompts.find(p => p.id === overlay._promptId);
+            if (savedPrompt && savedPrompt.content.trim()) {
+                await this.polishPrompt(textarea, savedPrompt.content.trim());
             } else {
-                this.showToast('内容不能为空');
+                this.showToast('无法找到原始提示词');
             }
         });
         
@@ -642,10 +646,9 @@ class PromptManager {
     }
 
     // Polish prompt with AI
-    async polishPrompt(textarea) {
-        const originalContent = textarea.value.trim();
-        
+    async polishPrompt(textarea, savedContent) {
         console.log('[UI] Starting polish prompt process...');
+        console.log('[UI] Using saved content from database:', savedContent);
         
         // Check if AI model is configured
         const result = await chrome.storage.local.get(['ai_model_configs']);
@@ -660,22 +663,43 @@ class PromptManager {
             return;
         }
         
-        // Disable textarea and show loading
+        // Get the modal overlay
+        const overlay = document.querySelector('.edit-modal-overlay');
+        if (!overlay) {
+            this.showToast('无法找到编辑窗口');
+            return;
+        }
+        
+        // Disable textarea
         textarea.disabled = true;
-        const polishBtn = document.querySelector('.edit-modal-polish');
-        const originalBtnText = polishBtn.textContent;
+        
+        // Get polish button and add loading class
+        const polishBtn = overlay.querySelector('.edit-modal-polish');
         polishBtn.textContent = '⏳ 润色中...';
         polishBtn.disabled = true;
+        polishBtn.classList.add('loading'); // Add loading class for rainbow animation
+        
+        // Create and show loading spinner overlay on the modal
+        const loadingSpinner = document.createElement('div');
+        loadingSpinner.className = 'polish-loading-overlay';
+        loadingSpinner.innerHTML = `
+            <div class="loading-spinner"></div>
+            <div style="margin-top: 12px; font-size: 14px; color: #5F6368; font-weight: 500;">润色中，请勿退出...</div>
+        `;
+        
+        // Add spinner to modal overlay (covers the entire modal)
+        const modal = overlay.querySelector('.edit-modal');
+        modal.appendChild(loadingSpinner);
         
         console.log('[UI] Sending message to background script...');
-        console.log('[UI] Message content length:', originalContent.length);
+        console.log('[UI] Message content length:', savedContent.length);
         console.log('[UI] Config:', activeConfig);
         
         try {
             // Send message to background script
             const response = await chrome.runtime.sendMessage({
                 action: 'polishPrompt',
-                content: originalContent,
+                content: savedContent,
                 config: activeConfig
             });
             
@@ -701,8 +725,15 @@ class PromptManager {
         } finally {
             // Re-enable textarea and button
             textarea.disabled = false;
-            polishBtn.textContent = originalBtnText;
+            polishBtn.textContent = '✨ 提示词润色';
             polishBtn.disabled = false;
+            polishBtn.classList.remove('loading'); // Remove loading class
+            
+            // Remove loading spinner
+            if (loadingSpinner && loadingSpinner.parentNode) {
+                loadingSpinner.remove();
+            }
+            
             textarea.focus();
         }
     }
