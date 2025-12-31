@@ -1024,6 +1024,34 @@ textarea.form-control {
     align-items: center;
     padding: 16px 20px;
     border-bottom: 1px solid #E8EAED;
+    gap: 12px;
+}
+
+/* Ensure card-tags works in edit modal header */
+.edit-modal-header .card-tags {
+    flex: 1;
+    justify-content: flex-start;
+    min-height: 24px;
+}
+
+/* Style adjustments for tags in edit modal */
+.edit-modal-header .tag-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 8px;
+}
+
+.edit-modal-header .app-badge {
+    font-size: 10px;
+    padding: 3px 6px 3px 20px;
+    border-radius: 8px;
+}
+
+.edit-modal-header .app-badge::before {
+    width: 12px;
+    height: 12px;
+    background-size: 12px 12px;
+    left: 4px;
 }
 
 .edit-modal-close {
@@ -1558,4 +1586,268 @@ textarea.form-control {
 
 .cloud-upload-btn:active {
     transform: translateY(0);
+}
+
+/* Card Actions - ... button and favorite button container */
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Menu button (...) */
+.menu-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #5F6368;
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.menu-btn:hover {
+    background-color: var(--google-gray);
+    color: var(--google-text);
+    transform: scale(1.1);
+}
+
+.menu-btn:active {
+    transform: scale(0.95);
+}
+
+/* Context Menu */
+.context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #DADCE0;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 10002;
+    min-width: 140px;
+    overflow: hidden;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.context-menu-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--google-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all var(--transition-fast);
+    border-bottom: 1px solid #F8F9FA;
+}
+
+.context-menu-item:last-child {
+    border-bottom: none;
+}
+
+.context-menu-item:hover {
+    background-color: var(--google-gray);
+}
+
+.context-menu-item.delete {
+    color: #EA4335;
+}
+
+.context-menu-item.delete:hover {
+    background-color: #FFEBEE;
+}
+
+/* Update card header to accommodate new actions */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 8px;
+    min-height: 24px;
+}
+
+/* Update favorite button to work with new layout */
+.favorite-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 4px;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.2);
+    filter: brightness(1.2);
+    background-color: var(--google-gray);
+}
+
+.favorite-btn.favorited {
+    background-image: url('icons/star.png');
+}
+
+.favorite-btn:not(.favorited) {
+    background-image: url('icons/dis_star.png');
+}
+
+/* Ensure card-tags has proper flex behavior */
+.card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+    align-items: center;
+    min-height: 20px;
+}
+
+/* Delete Confirmation Modal - Settings Page Style */
+.delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10003;
+    animation: fadeIn 0.2s ease;
+}
+
+.delete-modal {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 360px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.2s ease;
+    border: 1px solid #E8EAED;
+}
+
+.delete-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #E8EAED;
+}
+
+.delete-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #EA4335, #FF6B6B);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.delete-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #202124;
+    margin: 0;
+}
+
+.delete-modal-body {
+    padding: 16px 24px;
+    color: #5F6368;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.delete-modal-body p {
+    margin: 0 0 8px 0;
+}
+
+.delete-warning {
+    color: #EA4335 !important;
+    font-weight: 500;
+}
+
+.delete-modal-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid #E8EAED;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.btn-cancel, .btn-delete {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+}
+
+.btn-cancel {
+    background: white;
+    color: #5F6368;
+    border: 1px solid #DADCE0;
+}
+
+.btn-cancel:hover {
+    background: #F8F9FA;
+    border-color: #BDC1C6;
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #EA4335, #FF6B6B);
+    color: white;
+    border: none;
+}
+
+.btn-delete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(234, 67, 53, 0.3);
+}
+
+.btn-delete:active {
+    transform: translateY(0);
+}
+
+/* Animation for modal */
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }

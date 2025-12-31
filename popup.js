@@ -317,8 +317,11 @@ class PromptManager {
             <div class="prompt-card" data-id="${prompt.id}">
                 <div class="card-header">
                     <div class="card-tags">${tagsHtml}</div>
-                    <button class="favorite-btn ${prompt.isFavorite ? 'favorited' : ''}" data-action="toggle-favorite" title="${prompt.isFavorite ? '取消收藏' : '收藏'}">
-                    </button>
+                    <div class="card-actions">
+                        <button class="favorite-btn ${prompt.isFavorite ? 'favorited' : ''}" data-action="toggle-favorite" title="${prompt.isFavorite ? '取消收藏' : '收藏'}">
+                        </button>
+                        <button class="menu-btn" data-action="menu" title="更多操作">...</button>
+                    </div>
                 </div>
                 <div class="prompt-preview">
                     ${escapedPreview}
@@ -458,6 +461,11 @@ class PromptManager {
             container.removeEventListener('click', container._clickHandler);
         }
         
+        // Remove old contextmenu listener if exists
+        if (container._contextMenuHandler) {
+            container.removeEventListener('contextmenu', container._contextMenuHandler);
+        }
+        
         // Create new click handler with event delegation
         container._clickHandler = async (e) => {
             // Handle copy button clicks
@@ -490,7 +498,21 @@ class PromptManager {
                 return;
             }
             
-            // Handle card clicks (open edit modal)
+            // Handle menu button clicks
+            if (e.target.closest('.menu-btn')) {
+                e.stopPropagation();
+                const btn = e.target.closest('.menu-btn');
+                const card = btn.closest('.prompt-card');
+                const promptId = card.getAttribute('data-id');
+                const prompt = this.prompts.find(p => p.id === promptId);
+                
+                if (prompt) {
+                    this.showContextMenu(btn, prompt);
+                }
+                return;
+            }
+            
+            // Handle card clicks (open edit modal) - only if not clicking on any button
             const card = e.target.closest('.prompt-card');
             if (card && !e.target.closest('button')) {
                 const promptId = card.getAttribute('data-id');
@@ -502,8 +524,22 @@ class PromptManager {
             }
         };
         
-        // Attach the delegated listener
+        // Create context menu handler
+        container._contextMenuHandler = (e) => {
+            e.preventDefault();
+            const card = e.target.closest('.prompt-card');
+            if (card) {
+                const promptId = card.getAttribute('data-id');
+                const prompt = this.prompts.find(p => p.id === promptId);
+                if (prompt) {
+                    this.showContextMenu(e, prompt);
+                }
+            }
+        };
+        
+        // Attach the delegated listeners
         container.addEventListener('click', container._clickHandler);
+        container.addEventListener('contextmenu', container._contextMenuHandler);
     }
 
     // Open edit modal - FIXED
@@ -517,10 +553,26 @@ class PromptManager {
         // Create modal overlay
         const overlay = document.createElement('div');
         overlay.className = 'edit-modal-overlay';
+        
+        // Generate tags HTML for the header
+        let tagsHtml = '';
+        if (prompt.tags && Array.isArray(prompt.tags) && prompt.tags.length > 0) {
+            // Display up to 3 tags
+            tagsHtml = prompt.tags.slice(0, 3).map(tag => 
+                `<span class="tag-badge" data-tag="${this.escapeHtml(tag)}">${this.escapeHtml(tag)}</span>`
+            ).join('');
+        } else if (prompt.app) {
+            // Fallback for old data structure
+            tagsHtml = `<span class="app-badge ${prompt.app}">${this.getAppName(prompt.app)}</span>`;
+        } else {
+            // No tags available
+            tagsHtml = '<span class="tag-badge" style="opacity: 0.5;">无标签</span>';
+        }
+        
         overlay.innerHTML = `
             <div class="edit-modal">
                 <div class="edit-modal-header">
-                    <span class="app-badge ${prompt.app}">${this.getAppName(prompt.app)}</span>
+                    <div class="card-tags">${tagsHtml}</div>
                     <button class="edit-modal-close" title="关闭">×</button>
                 </div>
                 <textarea class="edit-modal-textarea" placeholder="编辑提示词内容...">${this.escapeHtml(prompt.content)}</textarea>
@@ -1494,6 +1546,175 @@ class PromptManager {
                 }
             }
             bgColorBtn.setAttribute('data-current-color', this.uiState.bgColor);
+        }
+    }
+
+    // Show context menu for prompt actions
+    showContextMenu(target, prompt) {
+        // Remove existing context menu
+        const existingMenu = document.querySelector('.context-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+
+        // Create context menu
+        const menu = document.createElement('div');
+        menu.className = 'context-menu';
+        menu.innerHTML = `
+            <div class="context-menu-item" data-action="edit">
+                <span>✏️</span>
+            </div>
+            <div class="context-menu-item" data-action="toggle-favorite">
+                <span>${prompt.isFavorite ? '⭐' : '☆'}</span>
+            </div>
+            <div class="context-menu-item delete" data-action="delete">
+                <span>🗑️</span>
+            </div>
+        `;
+
+        // Position the menu
+        if (target instanceof HTMLElement) {
+            // Button click - position below button
+            const rect = target.getBoundingClientRect();
+            menu.style.position = 'fixed';
+            menu.style.left = `${rect.left}px`;
+            menu.style.top = `${rect.bottom + 4}px`;
+        } else if (target instanceof MouseEvent) {
+            // Right click - position at cursor
+            menu.style.position = 'fixed';
+            menu.style.left = `${target.clientX}px`;
+            menu.style.top = `${target.clientY}px`;
+        }
+
+        // Add to body
+        document.body.appendChild(menu);
+
+        // Handle menu item clicks
+        menu.addEventListener('click', async (e) => {
+            const item = e.target.closest('.context-menu-item');
+            if (!item) return;
+
+            const action = item.getAttribute('data-action');
+            
+            switch (action) {
+                case 'edit':
+                    this.openEditModal(prompt);
+                    break;
+                case 'toggle-favorite':
+                    await this.toggleFavorite(prompt.id);
+                    break;
+                case 'delete':
+                    await this.showDeleteConfirm(prompt);
+                    break;
+            }
+
+            // Close menu
+            menu.remove();
+        });
+
+        // Close menu when clicking outside
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+
+        setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+        }, 100);
+
+        // Close menu on scroll
+        const handleScroll = () => {
+            menu.remove();
+            document.removeEventListener('scroll', handleScroll, true);
+        };
+        document.addEventListener('scroll', handleScroll, true);
+    }
+
+    // Show delete confirmation dialog
+    showDeleteConfirm(prompt) {
+        return new Promise((resolve) => {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'delete-modal-overlay';
+            
+            // Create modal content with settings page style
+            overlay.innerHTML = `
+                <div class="delete-modal">
+                    <div class="delete-modal-header">
+                        <div class="delete-icon">⚠️</div>
+                        <h3>确认删除</h3>
+                    </div>
+                    <div class="delete-modal-body">
+                        <p>确定要删除这个提示词吗？</p>
+                        <p class="delete-warning">删除后将无法恢复。</p>
+                    </div>
+                    <div class="delete-modal-footer">
+                        <button class="btn-cancel">取消</button>
+                        <button class="btn-delete">删除</button>
+                    </div>
+                </div>
+            `;
+            
+            // Add to body
+            document.body.appendChild(overlay);
+            
+            // Get buttons
+            const cancelBtn = overlay.querySelector('.btn-cancel');
+            const deleteBtn = overlay.querySelector('.btn-delete');
+            
+            // Handle cancel
+            cancelBtn.addEventListener('click', () => {
+                overlay.remove();
+                resolve(false);
+            });
+            
+            // Handle delete
+            deleteBtn.addEventListener('click', async () => {
+                await this.deletePrompt(prompt.id);
+                overlay.remove();
+                resolve(true);
+            });
+            
+            // Handle click outside
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.remove();
+                    resolve(false);
+                }
+            });
+            
+            // Handle Escape key
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    overlay.remove();
+                    resolve(false);
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+            
+            // Focus delete button
+            deleteBtn.focus();
+        });
+    }
+
+    // Delete a prompt
+    async deletePrompt(promptId) {
+        const promptIndex = this.prompts.findIndex(p => p.id === promptId);
+        if (promptIndex !== -1) {
+            // Remove the prompt
+            this.prompts.splice(promptIndex, 1);
+            
+            // Save data
+            await this.saveData();
+            
+            // Re-render all tabs
+            this.renderAllTabs();
+            
+            // Show success message
+            this.showToast('提示词已删除');
         }
     }
 
