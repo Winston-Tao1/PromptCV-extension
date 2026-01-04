@@ -145,6 +145,12 @@ class PromptManager {
             saveBtn.addEventListener('click', () => this.addNewPrompt());
         }
 
+        // Reverse button in reverse form
+        const reverseBtn = document.getElementById('reverse-btn');
+        if (reverseBtn) {
+            reverseBtn.addEventListener('click', () => this.reversePrompt());
+        }
+
         // Settings button
         const settingsBtn = document.getElementById('settings-btn');
         if (settingsBtn) {
@@ -840,6 +846,13 @@ class PromptManager {
 
     // Escape HTML to prevent XSS
     escapeHtml(text) {
+        // Handle null, undefined, or empty values
+        if (text === null || text === undefined) {
+            return '';
+        }
+        if (typeof text !== 'string') {
+            text = String(text);
+        }
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -987,7 +1000,7 @@ class PromptManager {
         if (saveBtn) {
             saveBtn.addEventListener('click', async () => {
                 await this.saveCacheData(true);
-                this.showToast('✓ 已保存到本地缓存');
+                this.showToast('已保存到本地缓存');
             });
         }
 
@@ -1748,6 +1761,217 @@ class PromptManager {
             // Show success message
             this.showToast('提示词已删除');
         }
+    }
+
+    // Reverse prompt from long text
+    async reversePrompt() {
+        const reverseInput = document.getElementById('reverse-input');
+        const reverseBtn = document.getElementById('reverse-btn');
+        
+        if (!reverseInput || !reverseBtn) return;
+        
+        const inputText = reverseInput.value.trim();
+        
+        if (!inputText) {
+            this.showToast('请输入需要反推的文本');
+            return;
+        }
+        
+        // Check if AI model is configured
+        const result = await chrome.storage.local.get(['ai_model_configs']);
+        const configs = result.ai_model_configs || [];
+        const activeConfig = configs.find(c => c.active);
+        
+        if (!activeConfig) {
+            this.showToast('请先在设置中配置并启动AI模型');
+            return;
+        }
+        
+        // Show loading state
+        const originalBtnContent = reverseBtn.innerHTML;
+        reverseBtn.disabled = true;
+        reverseBtn.classList.add('loading');
+        reverseBtn.innerHTML = '<img src="icons/reverse.png" style="width: 16px; height: 16px;"> <span>反推中...</span>';
+        reverseBtn.style.opacity = '0.6';
+        reverseBtn.style.cursor = 'not-allowed';
+        
+        // Create loading overlay
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'polish-loading-overlay';
+        loadingOverlay.innerHTML = `
+            <div class="loading-spinner"></div>
+            <div style="margin-top: 12px; font-size: 14px; color: #5F6368; font-weight: 500;">反推中...</div>
+        `;
+        
+        const reverseContent = document.getElementById('reverse');
+        reverseContent.style.position = 'relative';
+        reverseContent.appendChild(loadingOverlay);
+        
+        try {
+            // Prepare reverse prompt
+            const systemPrompt = `你是一个提示词分析专家。请根据以下AI生成的内容，推测最可能产生这个输出的提示词。
+
+请分析：
+1. 用户可能的意图是什么？
+2. 用户可能指定了哪些格式要求？
+3. 用户可能使用了哪些关键词？
+4. 推测完整的提示词是什么？
+
+请直接给出推测的提示词，不需要额外解释。提示词应该简洁明了，适合直接使用。
+
+需要分析的内容：
+${inputText}`;
+            
+            // Send message to background script
+            const response = await chrome.runtime.sendMessage({
+                action: 'reversePrompt',
+                content: inputText,
+                config: activeConfig
+            });
+            
+            console.log('[UI] Reverse response:', response);
+            
+            if (response.success) {
+                console.log('[UI] Reversed prompt:', response.reversedPrompt);
+                console.log('[UI] Reversed prompt type:', typeof response.reversedPrompt);
+                console.log('[UI] Reversed prompt length:', response.reversedPrompt?.length);
+                
+                // Show result in modal
+                this.showReverseResultModal(response.reversedPrompt);
+                
+                // Clear input
+                reverseInput.value = '';
+            } else {
+                console.error('[UI] Reverse failed:', response.error);
+                this.showToast('反推失败: ' + response.error);
+            }
+        } catch (error) {
+            console.error('Reverse prompt failed:', error);
+            this.showToast('反推失败: ' + error.message);
+        } finally {
+            // Remove loading overlay
+            if (loadingOverlay && loadingOverlay.parentNode) {
+                loadingOverlay.remove();
+            }
+            
+            // Restore button
+            reverseBtn.disabled = false;
+            reverseBtn.classList.remove('loading');
+            reverseBtn.innerHTML = originalBtnContent;
+            reverseBtn.style.opacity = '';
+            reverseBtn.style.cursor = '';
+        }
+    }
+
+    // Show reverse result modal
+    showReverseResultModal(reversedContent) {
+        console.log('[UI] showReverseResultModal called with:', reversedContent);
+        console.log('[UI] Type:', typeof reversedContent);
+        console.log('[UI] Length:', reversedContent?.length);
+        
+        // Prevent multiple modals
+        const existingModal = document.querySelector('.edit-modal-overlay');
+        if (existingModal) {
+            console.log('[UI] Modal already exists, returning');
+            return;
+        }
+        
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'edit-modal-overlay';
+        
+        const escapedContent = this.escapeHtml(reversedContent);
+        console.log('[UI] Escaped content:', escapedContent);
+        console.log('[UI] Escaped content type:', typeof escapedContent);
+        console.log('[UI] Escaped content length:', escapedContent?.length);
+        
+        overlay.innerHTML = `
+            <div class="edit-modal">
+                <div class="edit-modal-header">
+                    <div class="card-tags">
+                        <span class="tag-badge" style="background: linear-gradient(135deg, #E1F5FE, #B3E5FC); color: #0277BD;">反推结果</span>
+                    </div>
+                    <button class="edit-modal-close" title="关闭">×</button>
+                </div>
+                <textarea class="edit-modal-textarea" placeholder="反推的提示词...">${escapedContent}</textarea>
+                <div class="edit-modal-footer">
+                    <button class="edit-modal-save">💾 保存</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Focus textarea
+        const textarea = overlay.querySelector('.edit-modal-textarea');
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        
+        // Close button
+        overlay.querySelector('.edit-modal-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeEditModal(overlay);
+        });
+        
+        // Click overlay to close
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                this.closeEditModal(overlay);
+            }
+        });
+        
+        // Save button - save as new prompt with "反推" tag
+        overlay.querySelector('.edit-modal-save').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const promptContent = textarea.value.trim();
+            
+            if (!promptContent) {
+                this.showToast('内容不能为空');
+                return;
+            }
+            
+            // Create new prompt with "反推" tag
+            const newPrompt = {
+                id: Date.now().toString(),
+                tags: ['反推'], // Special tag for reversed prompts
+                content: promptContent,
+                isFavorite: false,
+                createdAt: new Date().toISOString()
+            };
+            
+            // Add to beginning of prompts array
+            this.prompts.unshift(newPrompt);
+            
+            // Enforce 20-item limit
+            if (this.prompts.length > 20) {
+                this.prompts = this.prompts.slice(0, 20);
+            }
+            
+            await this.saveData();
+            
+            // Copy to clipboard
+            await this.copyToClipboard(newPrompt.content);
+            
+            // Switch to all tab to show the new prompt
+            this.switchTab('all');
+            
+            this.showToast('反推提示词已保存并复制');
+            
+            // Close modal
+            this.closeEditModal(overlay);
+        });
+        
+        // ESC key to close
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeEditModal(overlay);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+        
+        // Store handler for cleanup
+        overlay._escHandler = escHandler;
     }
 
     // Initialize editable title

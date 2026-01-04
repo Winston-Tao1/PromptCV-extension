@@ -90,8 +90,119 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Keep message channel open for async response
   }
   
+  if (request.action === 'reversePrompt') {
+    // Handle AI reverse prompt request
+    reversePromptWithAI(request.content, request.config)
+      .then(reversedPrompt => {
+        sendResponse({ success: true, reversedPrompt });
+      })
+      .catch(error => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep message channel open for async response
+  }
+  
   return true;
 });
+
+// Reverse prompt with AI
+async function reversePromptWithAI(content, config) {
+  const { baseUrl, apiKey, modelName } = config;
+  
+  console.log('[AI Reverse] Starting with config:', { baseUrl, modelName, apiKeyLength: apiKey?.length });
+  
+  if (!baseUrl || !apiKey || !modelName) {
+    throw new Error('模型配置不完整');
+  }
+  
+  try {
+    // Prepare the API request
+    const endpoint = baseUrl.endsWith('/') ? baseUrl + 'chat/completions' : baseUrl + '/chat/completions';
+    console.log('[AI Reverse] Endpoint:', endpoint);
+    
+    const requestBody = {
+      model: modelName,
+      messages: [
+        {
+          role: 'system',
+          content: '你是一个提示词分析专家。你的任务是根据AI生成的内容，推测最可能产生这个输出的提示词。请分析用户可能的意图、格式要求和关键词，然后给出推测的完整提示词。直接给出提示词，不需要额外解释。'
+        },
+        {
+          role: 'user',
+          content: `请分析以下AI生成的内容，推测出最可能产生这个输出的提示词：\n\n${content}\n\n请直接给出推测的提示词，不需要其他解释。`
+        }
+      ],
+      temperature: 0.7,
+      top_p: 0.9,
+      stream: false
+    };
+    
+    console.log('[AI Reverse] Request body:', JSON.stringify(requestBody, null, 2));
+    
+    // Add timeout to fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    try {
+      // Make API request
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('[AI Reverse] Response status:', response.status);
+      console.log('[AI Reverse] Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[AI Reverse] Error response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { message: errorText };
+        }
+        
+        throw new Error(errorData.error?.message || errorData.message || `API请求失败: ${response.status} ${response.statusText}`);
+      }
+      
+      const responseText = await response.text();
+      console.log('[AI Reverse] Response text:', responseText);
+      
+      const data = JSON.parse(responseText);
+      console.log('[AI Reverse] Parsed response:', JSON.stringify(data, null, 2));
+      
+      // Extract reversed prompt from response
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        const reversedPrompt = data.choices[0].message.content.trim();
+        console.log('[AI Reverse] Success! Reversed prompt length:', reversedPrompt.length);
+        return reversedPrompt;
+      } else {
+        console.error('[AI Reverse] Invalid response format:', data);
+        throw new Error('API返回格式错误');
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error('请求超时，请检查网络连接或稍后重试');
+      }
+      throw fetchError;
+    }
+    
+  } catch (error) {
+    console.error('[AI Reverse] Failed:', error);
+    throw error;
+  }
+}
 
 // Polish prompt with AI
 async function polishPromptWithAI(content, config) {

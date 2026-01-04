@@ -310,6 +310,10 @@ body {
     background-image: url('icons/tabs_add.png');
 }
 
+.tab-btn[data-tab="reverse"] .tab-icon {
+    background-image: url('icons/tabs_reverse.png');
+}
+
 .tab-btn[data-tab="cloud"] .tab-icon {
     background-image: url('icons/tabs_cache.png');
 }
@@ -484,6 +488,12 @@ body {
 .tag-badge[data-tag="claude"] {
     background: linear-gradient(135deg, #FBE9E7, #FFCCBC);
     color: #D84315;
+}
+
+.tag-badge[data-tag="反推"] {
+    background: linear-gradient(135deg, #E1F5FE, #B3E5FC);
+    color: #0277BD;
+    font-weight: 600;
 }
 
 /* Backward compatibility: Keep old app-badge styles for old data */
@@ -977,6 +987,58 @@ textarea.form-control {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* Fix for reverse button loading state - prevent size changes */
+.save-btn.loading {
+    min-width: 120px;
+    height: 44px;
+    padding: 10px 14px;
+    font-size: 13px;
+    gap: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.save-btn.loading img {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.save-btn.loading span {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Ensure loading state maintains consistent button size */
+.save-btn.loading,
+.save-btn.loading:hover,
+.save-btn.loading:active {
+    transform: none;
+    box-shadow: var(--shadow-sm);
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+/* Polish button loading state - same fix */
+.edit-modal-polish.loading {
+    min-width: 100px;
+    height: 40px;
+    padding: 8px 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.edit-modal-polish.loading:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
 }
 
 /* Edit Modal */
