@@ -239,6 +239,15 @@ class PromptManager {
             case 'all':
                 this.renderAllPrompts();
                 break;
+            case 'add':
+                // Add tab doesn't need rendering, it's a form
+                break;
+            case 'reverse':
+                // Reverse tab doesn't need rendering, it's a form
+                break;
+            case 'cloud':
+                // Cloud tab doesn't need rendering, it's an editor
+                break;
         }
     }
 
