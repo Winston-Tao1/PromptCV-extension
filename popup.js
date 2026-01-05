@@ -1800,7 +1800,7 @@ class PromptManager {
         const originalBtnContent = reverseBtn.innerHTML;
         reverseBtn.disabled = true;
         reverseBtn.classList.add('loading');
-        reverseBtn.innerHTML = '<img src="icons/reverse.png" style="width: 16px; height: 16px;"> <span>反推中...</span>';
+        reverseBtn.innerHTML = '<span>⏳ 反推中...</span>';
         reverseBtn.style.opacity = '0.6';
         reverseBtn.style.cursor = 'not-allowed';
         
@@ -1809,7 +1809,7 @@ class PromptManager {
         loadingOverlay.className = 'polish-loading-overlay';
         loadingOverlay.innerHTML = `
             <div class="loading-spinner"></div>
-            <div style="margin-top: 12px; font-size: 14px; color: #5F6368; font-weight: 500;">反推中...</div>
+            <div style="margin-top: 12px; font-size: 14px; color: #5F6368; font-weight: 500;">⏳ 反推中...</div>
         `;
         
         const reverseContent = document.getElementById('reverse');
@@ -1863,12 +1863,14 @@ ${inputText}`;
                 loadingOverlay.remove();
             }
             
-            // Restore button
-            reverseBtn.disabled = false;
-            reverseBtn.classList.remove('loading');
-            reverseBtn.innerHTML = originalBtnContent;
-            reverseBtn.style.opacity = '';
-            reverseBtn.style.cursor = '';
+        // Restore button - completely reset all styles
+        reverseBtn.disabled = false;
+        reverseBtn.classList.remove('loading');
+        reverseBtn.innerHTML = '<img src="icons/reverse.png" class="save-btn-icon" alt="反推"><span>开始反推</span>';
+        reverseBtn.style.opacity = '';
+        reverseBtn.style.cursor = '';
+        // Force reflow to prevent transition glitches
+        reverseBtn.offsetHeight;
         }
     }
 

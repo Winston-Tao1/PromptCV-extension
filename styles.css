@@ -866,6 +866,8 @@ textarea.form-control {
     gap: 6px;
     box-shadow: var(--shadow-sm);
     margin-top: 8px;
+    /* Prevent border transition glitches */
+    border-color: #DADCE0 !important;
 }
 
 .save-btn::before {
@@ -895,7 +897,7 @@ textarea.form-control {
 }
 
 .save-btn:hover {
-    border-color: transparent;
+    border-color: #DADCE0 !important;
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);
 }
@@ -1038,7 +1040,7 @@ textarea.form-control {
     to { transform: rotate(360deg); }
 }
 
-/* Fix for reverse button loading state - prevent size changes */
+/* Fix for reverse button loading state - prevent size changes and ensure gray borders */
 .save-btn.loading {
     min-width: 120px;
     height: 44px;
@@ -1049,12 +1051,16 @@ textarea.form-control {
     align-items: center;
     justify-content: center;
     white-space: nowrap;
+    background: white;
+    color: var(--google-text);
+    border: 2px solid #DADCE0;
+    border-radius: 6px;
+    position: relative;
 }
 
-.save-btn.loading img {
-    width: 16px;
-    height: 16px;
-    margin: 0;
+.save-btn.loading::before,
+.save-btn.loading::after {
+    display: none;
 }
 
 .save-btn.loading span {
@@ -1062,7 +1068,7 @@ textarea.form-control {
     font-weight: 500;
 }
 
-/* Ensure loading state maintains consistent button size */
+/* Ensure loading state maintains consistent button size with gray borders */
 .save-btn.loading,
 .save-btn.loading:hover,
 .save-btn.loading:active {
@@ -1070,6 +1076,8 @@ textarea.form-control {
     box-shadow: var(--shadow-sm);
     opacity: 0.8;
     cursor: not-allowed;
+    background: white;
+    border: 2px solid #DADCE0;
 }
 
 /* Polish button loading state - same fix */
