@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "PromptCV - AI提示词管理器",
+  "name": "Prompt - AI提示词管理器",
   "version": "1.0.0",
   "description": "专业的AI提示词管理工具，支持多平台同步，收藏和历史记录管理",
   "action": {

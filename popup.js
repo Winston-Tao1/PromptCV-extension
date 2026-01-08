@@ -2399,7 +2399,7 @@ ${inputText}`;
             
             // Restore default if empty
             if (!newTitle) {
-                newTitle = 'PromptCV';
+                newTitle = 'Prompt';
             }
             
             titleElement.textContent = newTitle;
@@ -2441,7 +2441,7 @@ ${inputText}`;
             if (e.key === 'Escape') {
                 // Restore original title from local storage
                 chrome.storage.local.get(['appTitle'], (result) => {
-                    titleElement.textContent = result.appTitle || 'PromptCV';
+                    titleElement.textContent = result.appTitle || 'Prompt';
                     titleElement.blur();
                 });
             }
