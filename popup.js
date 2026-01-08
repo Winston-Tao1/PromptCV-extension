@@ -1018,23 +1018,30 @@ class PromptManager {
         if (overlay._isClosing) return;
         overlay._isClosing = true;
         
-        // Disable all interactive elements immediately to prevent further clicks
-        const closeBtn = overlay.querySelector('.edit-modal-close');
-        const saveBtn = overlay.querySelector('.edit-modal-save');
-        const polishBtn = overlay.querySelector('.edit-modal-polish');
-        const textarea = overlay.querySelector('.edit-modal-textarea');
-        
-        if (closeBtn) closeBtn.disabled = true;
-        if (saveBtn) saveBtn.disabled = true;
-        if (polishBtn) polishBtn.disabled = true;
-        if (textarea) textarea.disabled = true;
-        
-        // Remove ESC handler
+        // Remove ESC handler first
         if (overlay._escHandler) {
             document.removeEventListener('keydown', overlay._escHandler);
         }
         
-        // Add closing class for animation
+        // CRITICAL: Disable ALL interactions and animations on the modal IMMEDIATELY
+        // This prevents any hover effects, transitions, or style changes during closing
+        const modal = overlay.querySelector('.edit-modal');
+        if (modal) {
+            modal.style.pointerEvents = 'none';
+            modal.style.transition = 'none'; // Disable all transitions on modal content
+        }
+        
+        // Disable all buttons to prevent hover effects
+        const buttons = overlay.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.style.pointerEvents = 'none';
+            btn.style.transition = 'none';
+        });
+        
+        // Prevent any further interactions on overlay
+        overlay.style.pointerEvents = 'none';
+        
+        // Add closing class for animation (this should be smooth now)
         overlay.classList.add('closing');
         
         // Remove after animation completes (150ms to match CSS exactly)
