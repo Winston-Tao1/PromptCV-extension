@@ -1502,7 +1502,7 @@ textarea.form-control {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 36px 8px 12px;
+    padding: 8px 60px 8px 12px;
     background: var(--google-gray);
     border: 1px solid #DADCE0;
     border-radius: 6px;
@@ -1547,36 +1547,73 @@ textarea.form-control {
     color: var(--google-dark-gray);
 }
 
-.cloud-thumbnail-remove {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #DADCE0;
+/* File thumbnail actions container */
+.cloud-thumbnail-actions {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    pointer-events: none;
+}
+
+.cloud-thumbnail:hover .cloud-thumbnail-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* File thumbnail download button */
+.cloud-thumbnail-download {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
-    color: var(--google-dark-gray);
     transition: all var(--transition-fast);
     flex-shrink: 0;
-    opacity: 0;
-    position: absolute;
-    top: 4px;
-    right: 4px;
     pointer-events: auto;
+    background-image: url('icons/cache_before_download.png');
+    background-size: 23px 23px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
-.cloud-thumbnail:hover .cloud-thumbnail-remove {
-    opacity: 1;
+.cloud-thumbnail-download:hover {
+    background-image: url('icons/cache_download.png');
+    background-size: 23px 23px;
+    transform: scale(1.1);
+}
+
+/* File thumbnail remove button */
+.cloud-thumbnail-remove {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    pointer-events: auto;
+    background-image: url('icons/cache_before_remove.png');
+    background-size: 23px 23px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .cloud-thumbnail-remove:hover {
-    background-color: #EA4335;
-    border-color: #EA4335;
-    color: white;
+    background-image: url('icons/cache_remove.png');
+    background-size: 23px 23px;
+    transform: scale(1.1);
 }
 
 /* Image Thumbnail */
@@ -1588,43 +1625,79 @@ textarea.form-control {
 }
 
 .cloud-image-thumbnail img {
-    max-width: 100%;
-    max-height: 200px;
+    max-width: 70%;
+    max-height: 140px;
     border-radius: 6px;
     border: 1px solid #DADCE0;
     display: block;
     box-sizing: border-box;
 }
 
-.cloud-image-remove {
+/* Image actions container */
+.cloud-image-actions {
     position: absolute;
     top: 8px;
     right: 8px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #DADCE0;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    pointer-events: none;
+}
+
+.cloud-image-thumbnail:hover .cloud-image-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Image download button */
+.cloud-image-download {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
-    color: var(--google-dark-gray);
     transition: all var(--transition-fast);
-    opacity: 0;
     pointer-events: auto;
+    background-image: url('icons/cache_before_download.png');
+    background-size: 23px 23px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
-.cloud-image-thumbnail:hover .cloud-image-remove {
-    opacity: 1;
+.cloud-image-download:hover {
+    background-image: url('icons/cache_download.png');
+    background-size: 23px 23px;
+    transform: scale(1.1);
+}
+
+/* Image remove button */
+.cloud-image-remove {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    pointer-events: auto;
+    background-image: url('icons/cache_before_remove.png');
+    background-size: 23px 23px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .cloud-image-remove:hover {
-    background-color: #EA4335;
-    border-color: #EA4335;
-    color: white;
+    background-image: url('icons/cache_remove.png');
+    background-size: 23px 23px;
+    transform: scale(1.1);
 }
 
 .cloud-actions {

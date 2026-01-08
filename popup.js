@@ -1356,18 +1356,37 @@ class PromptManager {
                     
                     // Insert at cursor position
                     const selection = window.getSelection();
+                    const cloudEditor = document.getElementById('cloud-editor');
+                    
                     if (selection.rangeCount > 0) {
                         const range = selection.getRangeAt(0);
                         range.deleteContents();
+                        
+                        // Insert space before thumbnail for cursor positioning
+                        const spaceBefore = document.createTextNode('\u200B');
+                        range.insertNode(spaceBefore);
+                        
+                        // Insert thumbnail
+                        range.setStartAfter(spaceBefore);
                         range.insertNode(thumbnail);
                         
-                        // Move cursor after image
+                        // Insert space after thumbnail for cursor positioning
+                        const spaceAfter = document.createTextNode('\u200B');
                         range.setStartAfter(thumbnail);
-                        range.setEndAfter(thumbnail);
+                        range.insertNode(spaceAfter);
+                        
+                        // Move cursor after the space
+                        range.setStartAfter(spaceAfter);
+                        range.setEndAfter(spaceAfter);
                         selection.removeAllRanges();
                         selection.addRange(range);
                     } else {
-                        document.getElementById('cloud-editor').appendChild(thumbnail);
+                        // Append with spaces
+                        const spaceBefore = document.createTextNode('\u200B');
+                        const spaceAfter = document.createTextNode('\u200B');
+                        cloudEditor.appendChild(spaceBefore);
+                        cloudEditor.appendChild(thumbnail);
+                        cloudEditor.appendChild(spaceAfter);
                     }
                     
                     this.scheduleAutoSave();
@@ -1411,15 +1430,32 @@ class PromptManager {
                 if (selection.rangeCount > 0 && cloudEditor.contains(selection.anchorNode)) {
                     const range = selection.getRangeAt(0);
                     range.deleteContents();
+                    
+                    // Insert space before thumbnail for cursor positioning
+                    const spaceBefore = document.createTextNode('\u200B');
+                    range.insertNode(spaceBefore);
+                    
+                    // Insert thumbnail
+                    range.setStartAfter(spaceBefore);
                     range.insertNode(thumbnail);
                     
-                    // Move cursor after thumbnail
+                    // Insert space after thumbnail for cursor positioning
+                    const spaceAfter = document.createTextNode('\u200B');
                     range.setStartAfter(thumbnail);
-                    range.setEndAfter(thumbnail);
+                    range.insertNode(spaceAfter);
+                    
+                    // Move cursor after the space
+                    range.setStartAfter(spaceAfter);
+                    range.setEndAfter(spaceAfter);
                     selection.removeAllRanges();
                     selection.addRange(range);
                 } else {
+                    // Append with spaces
+                    const spaceBefore = document.createTextNode('\u200B');
+                    const spaceAfter = document.createTextNode('\u200B');
+                    cloudEditor.appendChild(spaceBefore);
                     cloudEditor.appendChild(thumbnail);
+                    cloudEditor.appendChild(spaceAfter);
                 }
 
                 this.scheduleAutoSave();
@@ -1438,7 +1474,7 @@ class PromptManager {
         thumbnail.className = 'cloud-thumbnail';
         thumbnail.contentEditable = 'false';
         thumbnail.setAttribute('data-file', JSON.stringify(fileData));
-        thumbnail.setAttribute('tabindex', '0'); // 添加tabindex使其可聚焦
+        thumbnail.setAttribute('tabindex', '0');
 
         const icon = this.getFileIcon(fileData.ext);
         
@@ -1448,8 +1484,19 @@ class PromptManager {
                 <span class="cloud-thumbnail-name">${this.escapeHtml(fileData.name)}</span>
                 <span class="cloud-thumbnail-size">${fileData.size}</span>
             </span>
-            <button class="cloud-thumbnail-remove" type="button" title="删除文件">×</button>
+            <div class="cloud-thumbnail-actions">
+                <button class="cloud-thumbnail-download" type="button" title="下载文件"></button>
+                <button class="cloud-thumbnail-remove" type="button" title="删除文件"></button>
+            </div>
         `;
+
+        // Download button
+        const downloadBtn = thumbnail.querySelector('.cloud-thumbnail-download');
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.downloadFile(fileData);
+        });
 
         // Remove button
         const removeBtn = thumbnail.querySelector('.cloud-thumbnail-remove');
@@ -1468,16 +1515,29 @@ class PromptManager {
         const container = document.createElement('span');
         container.className = 'cloud-image-thumbnail';
         container.contentEditable = 'false';
-        container.setAttribute('tabindex', '0'); // 添加tabindex使其可聚焦
+        container.setAttribute('tabindex', '0');
 
         const img = document.createElement('img');
         img.src = src;
 
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'cloud-image-actions';
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'cloud-image-download';
+        downloadBtn.type = 'button';
+        downloadBtn.setAttribute('title', '下载图片');
+        
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.downloadImage(src);
+        });
+
         const removeBtn = document.createElement('button');
         removeBtn.className = 'cloud-image-remove';
         removeBtn.type = 'button';
-        removeBtn.textContent = '×';
-        removeBtn.setAttribute('title', '删除图片'); // 添加标题
+        removeBtn.setAttribute('title', '删除图片');
         
         removeBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1486,10 +1546,45 @@ class PromptManager {
             this.scheduleAutoSave();
         });
 
+        actionsDiv.appendChild(downloadBtn);
+        actionsDiv.appendChild(removeBtn);
+
         container.appendChild(img);
-        container.appendChild(removeBtn);
+        container.appendChild(actionsDiv);
 
         return container;
+    }
+
+    // Download file
+    downloadFile(fileData) {
+        try {
+            const link = document.createElement('a');
+            link.href = fileData.data;
+            link.download = fileData.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            this.showToast('文件下载成功');
+        } catch (error) {
+            console.error('Download file failed:', error);
+            this.showToast('文件下载失败');
+        }
+    }
+
+    // Download image
+    downloadImage(src) {
+        try {
+            const link = document.createElement('a');
+            link.href = src;
+            link.download = `image_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            this.showToast('图片下载成功');
+        } catch (error) {
+            console.error('Download image failed:', error);
+            this.showToast('图片下载失败');
+        }
     }
 
     // Get file icon based on extension
@@ -1573,12 +1668,6 @@ class PromptManager {
                 return;
             }
 
-            // Validate file size (max 1MB for local storage)
-            if (file.size > 1024 * 1024) {
-                this.showToast('图片文件过大（最大1MB）');
-                e.target.value = '';
-                return;
-            }
 
             // Read file as base64
             const reader = new FileReader();

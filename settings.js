@@ -15,6 +15,9 @@ const STORAGE_KEY = 'ai_model_configs';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Load logo FIRST to prevent flashing
+    await loadLogo();
+    
     // Record that user is now on settings page
     try {
         await chrome.storage.local.set({ lastPage: 'settings' });
@@ -26,6 +29,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     restoreSettingsPageState();
 });
+
+// Load logo from storage
+async function loadLogo() {
+    const headerIcon = document.getElementById('settings-header-icon');
+    if (!headerIcon) return;
+    
+    try {
+        const result = await chrome.storage.local.get(['customLogo']);
+        if (result.customLogo) {
+            headerIcon.style.backgroundImage = `url('${result.customLogo}')`;
+        } else {
+            // No custom logo, clear the background image
+            headerIcon.style.backgroundImage = 'none';
+        }
+    } catch (error) {
+        console.error('Failed to load logo:', error);
+        // On error, also clear the background
+        headerIcon.style.backgroundImage = 'none';
+    }
+}
 
 // Restore settings page state from storage
 async function restoreSettingsPageState() {

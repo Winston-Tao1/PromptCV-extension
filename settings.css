@@ -53,10 +53,38 @@ body {
 .header-title {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
     margin-bottom: 6px;
     position: relative;
+}
+
+.header-icon {
+    width: 28px;
+    height: 28px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block;
+    flex-shrink: 0;
+}
+
+/* Default placeholder when no logo is set */
+.header-icon[style*="none"] {
+    background-color: #F8F9FA;
+    border: 1px solid #DADCE0;
+    border-radius: 4px;
+    position: relative;
+}
+
+.header-icon[style*="none"]::after {
+    content: 'CV';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: #5F6368;
 }
 
 .header-title h1 {
@@ -69,6 +97,7 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     margin: 0;
+    flex: 1;
 }
 
 .home-btn {
@@ -189,7 +218,10 @@ body {
 }
 
 .label-icon {
-    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    display: block;
+    object-fit: contain;
 }
 
 .required {
@@ -339,19 +371,6 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-}
-
-.model-card.active .model-card-title::before {
-    content: '✓';
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background: #34A853;
-    color: white;
-    border-radius: 50%;
-    text-align: center;
-    line-height: 16px;
-    font-size: 12px;
 }
 
 .model-card-actions {
