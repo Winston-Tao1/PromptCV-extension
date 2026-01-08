@@ -165,6 +165,61 @@ class PromptManager {
         
         // Check if we need to restore to a specific tab
         this.checkAndRestoreTab();
+        
+        // Initialize auto-save for add page
+        this.initAddPageAutoSave();
+        
+        // Initialize auto-save for reverse page
+        this.initReversePageAutoSave();
+        
+        // Check and restore edit modal state
+        this.checkAndRestoreEditModal();
+    }
+    
+    // Initialize auto-save for add page
+    initAddPageAutoSave() {
+        const promptContent = document.getElementById('prompt-content');
+        if (!promptContent) return;
+        
+        // Restore saved content on load
+        this.restoreAddPageState();
+        
+        // Auto-save on input
+        let saveTimeout;
+        promptContent.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                this.saveAddPageState();
+            }, 500); // Save after 500ms of inactivity
+        });
+        
+        // Save immediately when user switches tabs or closes window
+        window.addEventListener('beforeunload', () => {
+            this.saveAddPageState();
+        });
+    }
+    
+    // Initialize auto-save for reverse page
+    initReversePageAutoSave() {
+        const reverseInput = document.getElementById('reverse-input');
+        if (!reverseInput) return;
+        
+        // Restore saved content on load
+        this.restoreReversePageState();
+        
+        // Auto-save on input
+        let saveTimeout;
+        reverseInput.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                this.saveReversePageState();
+            }, 500); // Save after 500ms of inactivity
+        });
+        
+        // Save immediately when user switches tabs or closes window
+        window.addEventListener('beforeunload', () => {
+            this.saveReversePageState();
+        });
     }
 
     // Check and restore to specific tab if needed
@@ -432,10 +487,104 @@ class PromptManager {
         });
         this.selectedTags.length = 0;
         
+        // Clear saved add page state
+        await this.clearAddPageState();
+        
         // Switch to all tab to show the new prompt
         this.switchTab('all');
         
         this.showToast('提示词已保存并复制');
+    }
+    
+    // Save add page state
+    async saveAddPageState() {
+        try {
+            const promptContent = document.getElementById('prompt-content');
+            const addPageState = {
+                content: promptContent ? promptContent.value : '',
+                tags: this.selectedTags || [],
+                timestamp: new Date().toISOString()
+            };
+            
+            await chrome.storage.local.set({ addPageState });
+        } catch (error) {
+            console.error('Failed to save add page state:', error);
+        }
+    }
+    
+    // Clear add page state
+    async clearAddPageState() {
+        try {
+            await chrome.storage.local.remove('addPageState');
+        } catch (error) {
+            console.error('Failed to clear add page state:', error);
+        }
+    }
+    
+    // Restore add page state
+    async restoreAddPageState() {
+        try {
+            const result = await chrome.storage.local.get(['addPageState']);
+            if (result.addPageState) {
+                const promptContent = document.getElementById('prompt-content');
+                if (promptContent && result.addPageState.content) {
+                    promptContent.value = result.addPageState.content;
+                }
+                
+                // Restore selected tags
+                if (result.addPageState.tags && result.addPageState.tags.length > 0) {
+                    this.selectedTags = [...result.addPageState.tags];
+                    // Update UI to show selected tags
+                    document.querySelectorAll('.tag-cloud-btn').forEach(btn => {
+                        const tag = btn.getAttribute('data-tag');
+                        if (this.selectedTags.includes(tag)) {
+                            btn.classList.add('selected');
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to restore add page state:', error);
+        }
+    }
+    
+    // Save reverse page state
+    async saveReversePageState() {
+        try {
+            const reverseInput = document.getElementById('reverse-input');
+            const reversePageState = {
+                content: reverseInput ? reverseInput.value : '',
+                timestamp: new Date().toISOString()
+            };
+            
+            await chrome.storage.local.set({ reversePageState });
+        } catch (error) {
+            console.error('Failed to save reverse page state:', error);
+        }
+    }
+    
+    // Clear reverse page state
+    async clearReversePageState() {
+        try {
+            await chrome.storage.local.remove('reversePageState');
+        } catch (error) {
+            console.error('Failed to clear reverse page state:', error);
+        }
+    }
+    
+    // Restore reverse page state
+    async restoreReversePageState() {
+        try {
+            const result = await chrome.storage.local.get(['reversePageState']);
+            if (result.reversePageState) {
+                const reverseInput = document.getElementById('reverse-input');
+                if (reverseInput && result.reversePageState.content) {
+                    reverseInput.value = result.reversePageState.content;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to restore reverse page state:', error);
+        }
     }
 
     // Copy to clipboard
@@ -642,6 +791,8 @@ class PromptManager {
             if (newContent) {
                 await this.saveEditedPrompt(prompt.id, newContent);
                 this.closeEditModal(overlay);
+                // Clear edit state after successful save
+                await this.clearEditModalState();
             } else {
                 this.showToast('内容不能为空');
             }
@@ -658,6 +809,112 @@ class PromptManager {
         
         // Store handler for cleanup
         overlay._escHandler = escHandler;
+        
+        // Initialize auto-save for edit modal
+        this.initEditModalAutoSave(overlay, prompt.id);
+        
+        // Restore previous edit state if exists
+        this.restoreEditModalState(overlay, prompt.id);
+    }
+    
+    // Initialize auto-save for edit modal
+    initEditModalAutoSave(overlay, promptId) {
+        const textarea = overlay.querySelector('.edit-modal-textarea');
+        if (!textarea) return;
+        
+        // Auto-save on input
+        let saveTimeout;
+        textarea.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                this.saveEditModalState(overlay, promptId);
+            }, 500); // Save after 500ms of inactivity
+        });
+        
+        // Save immediately when user closes window
+        window.addEventListener('beforeunload', () => {
+            this.saveEditModalState(overlay, promptId);
+        });
+    }
+    
+    // Save edit modal state
+    async saveEditModalState(overlay, promptId) {
+        try {
+            const textarea = overlay.querySelector('.edit-modal-textarea');
+            if (!textarea) return;
+            
+            const editModalState = {
+                promptId: promptId,
+                content: textarea.value,
+                timestamp: new Date().toISOString()
+            };
+            
+            await chrome.storage.local.set({ editModalState });
+        } catch (error) {
+            console.error('Failed to save edit modal state:', error);
+        }
+    }
+    
+    // Restore edit modal state
+    async restoreEditModalState(overlay, promptId) {
+        try {
+            const result = await chrome.storage.local.get(['editModalState']);
+            if (result.editModalState && result.editModalState.promptId === promptId) {
+                const textarea = overlay.querySelector('.edit-modal-textarea');
+                if (textarea && result.editModalState.content) {
+                    textarea.value = result.editModalState.content;
+                    // Focus and position cursor at the end
+                    textarea.focus();
+                    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to restore edit modal state:', error);
+        }
+    }
+    
+    // Clear edit modal state
+    async clearEditModalState() {
+        try {
+            await chrome.storage.local.remove('editModalState');
+        } catch (error) {
+            console.error('Failed to clear edit modal state:', error);
+        }
+    }
+    
+    // Check and restore edit modal on startup
+    async checkAndRestoreEditModal() {
+        try {
+            const result = await chrome.storage.local.get(['editModalState']);
+            if (result.editModalState) {
+                const { promptId, content, timestamp } = result.editModalState;
+                
+                // Check if the prompt still exists
+                const prompt = this.prompts.find(p => p.id === promptId);
+                if (prompt) {
+                    // Check if timestamp is recent (within 24 hours)
+                    const timeDiff = new Date() - new Date(timestamp);
+                    const oneDay = 24 * 60 * 60 * 1000;
+                    
+                    if (timeDiff < oneDay) {
+                        // Open edit modal with the saved state
+                        this.openEditModal(prompt);
+                        
+                        // Note: The content will be restored in initEditModalAutoSave
+                        // Show a toast to inform the user
+                        this.showToast('已恢复之前的编辑状态');
+                    } else {
+                        // Clear old state
+                        await this.clearEditModalState();
+                    }
+                } else {
+                    // Prompt no longer exists, clear state
+                    await this.clearEditModalState();
+                }
+            }
+        } catch (error) {
+            console.error('Failed to check and restore edit modal:', error);
+        }
     }
 
     // Polish prompt with AI
@@ -1809,7 +2066,7 @@ class PromptManager {
         loadingOverlay.className = 'polish-loading-overlay';
         loadingOverlay.innerHTML = `
             <div class="loading-spinner"></div>
-            <div style="margin-top: 12px; font-size: 14px; color: #5F6368; font-weight: 500;">⏳ 反推中...</div>
+            <div style="margin-top: 12px; font-size: 14px; color: #5F6368; font-weight: 500;">反推中，请勿退出...</div>
         `;
         
         const reverseContent = document.getElementById('reverse');
@@ -1850,6 +2107,9 @@ ${inputText}`;
                 
                 // Clear input
                 reverseInput.value = '';
+                
+                // Clear saved reverse page state
+                await this.clearReversePageState();
             } else {
                 console.error('[UI] Reverse failed:', response.error);
                 this.showToast('反推失败: ' + response.error);
@@ -1900,7 +2160,7 @@ ${inputText}`;
             <div class="edit-modal">
                 <div class="edit-modal-header">
                     <div class="card-tags">
-                        <span class="tag-badge" style="background: linear-gradient(135deg, #E1F5FE, #B3E5FC); color: #0277BD;">反推结果</span>
+                        <span class="tag-badge" style="background: linear-gradient(135deg, #E1F5FE, #B3E5FC); color: #0277BD;">反推</span>
                     </div>
                     <button class="edit-modal-close" title="关闭">×</button>
                 </div>
