@@ -34,8 +34,8 @@
 
 1. **克隆项目**
    ```bash
-   git clone https://github.com/Winston-Tao1/PromptCV-extension.git
-   cd PromptCV-extension
+   git clone https://github.com/Winston-Tao1/Prompt-extension.git
+   cd Prompt-extension
    ```
 
 2. **加载到 Chrome**
@@ -249,8 +249,8 @@ A: 没有限制，支持任意大小的图片文件。
 ## 📧 联系方式
 
 - **GitHub**: [@Winston-Tao1](https://github.com/Winston-Tao1)
-- **项目地址**: [Prompt Extension](https://github.com/Winston-Tao1/PromptCV-extension)
-- **问题反馈**: [GitHub Issues](https://github.com/Winston-Tao1/PromptCV-extension/issues)
+- **项目地址**: [Prompt Extension](https://github.com/Winston-Tao1/Prompt-extension)
+- **问题反馈**: [GitHub Issues](https://github.com/Winston-Tao1/Prompt-extension/issues)
 
 ---
 

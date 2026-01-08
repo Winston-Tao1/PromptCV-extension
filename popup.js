@@ -1,4 +1,4 @@
-// PromptCV - Popup JavaScript
+// Prompt - Popup JavaScript
 // Professional prompt management with Chrome Storage sync
 
 // CRITICAL: Check if we should redirect to settings BEFORE initializing anything

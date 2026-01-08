@@ -1,9 +1,9 @@
-// PromptCV Background Service Worker
+// Prompt Background Service Worker
 // 处理扩展安装和更新事件
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
-    console.log('PromptCV 已安装！');
+    console.log('Prompt 已安装！');
     
     // 初始化云同步存储（提示词、历史记录）
     chrome.storage.sync.set({
@@ -24,7 +24,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       }
     });
   } else if (details.reason === 'update') {
-    console.log('PromptCV 已更新到版本:', chrome.runtime.getManifest().version);
+    console.log('Prompt 已更新到版本:', chrome.runtime.getManifest().version);
     
     // 版本更新时，处理旧数据迁移
     chrome.storage.local.get(['prompts', 'history'], (localData) => {
@@ -133,7 +133,6 @@ async function reversePromptWithAI(content, config) {
         }
       ],
       temperature: 0.7,
-      top_p: 0.9,
       stream: false
     };
     
@@ -232,7 +231,6 @@ async function polishPromptWithAI(content, config) {
         }
       ],
       temperature: 0.7,
-      top_p: 0.9,
       stream: false
     };
     
