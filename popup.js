@@ -1010,9 +1010,24 @@ class PromptManager {
         }
     }
     
-    // Close edit modal - FIXED animation timing
+    // Close edit modal - FIXED animation timing and flickering
     closeEditModal(overlay) {
         if (!overlay || !overlay.parentNode) return;
+        
+        // Prevent multiple close calls
+        if (overlay._isClosing) return;
+        overlay._isClosing = true;
+        
+        // Disable all interactive elements immediately to prevent further clicks
+        const closeBtn = overlay.querySelector('.edit-modal-close');
+        const saveBtn = overlay.querySelector('.edit-modal-save');
+        const polishBtn = overlay.querySelector('.edit-modal-polish');
+        const textarea = overlay.querySelector('.edit-modal-textarea');
+        
+        if (closeBtn) closeBtn.disabled = true;
+        if (saveBtn) saveBtn.disabled = true;
+        if (polishBtn) polishBtn.disabled = true;
+        if (textarea) textarea.disabled = true;
         
         // Remove ESC handler
         if (overlay._escHandler) {
@@ -1022,12 +1037,12 @@ class PromptManager {
         // Add closing class for animation
         overlay.classList.add('closing');
         
-        // Remove after animation completes (200ms to match CSS)
+        // Remove after animation completes (150ms to match CSS exactly)
         setTimeout(() => {
             if (overlay && overlay.parentNode) {
                 overlay.remove();
             }
-        }, 200);
+        }, 150);
     }
     
     // Save edited prompt

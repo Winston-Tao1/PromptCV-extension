@@ -1110,11 +1110,11 @@ textarea.form-control {
     align-items: center;
     justify-content: center;
     z-index: 10000;
-    animation: fadeIn 0.2s ease;
+    animation: fadeIn 0.15s ease-out forwards;
 }
 
 .edit-modal-overlay.closing {
-    animation: fadeOut 0.2s ease;
+    animation: fadeOut 0.15s ease-in forwards;
 }
 
 @keyframes fadeOut {
@@ -1135,11 +1135,11 @@ textarea.form-control {
     display: flex;
     flex-direction: column;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    animation: scaleIn 0.2s ease;
+    animation: scaleIn 0.15s ease-out forwards;
 }
 
 .edit-modal-overlay.closing .edit-modal {
-    animation: scaleOut 0.2s ease;
+    animation: scaleOut 0.15s ease-in forwards;
 }
 
 @keyframes scaleIn {
