@@ -284,7 +284,7 @@ async function handleSaveConfig(e) {
         
         // Check max models limit
         if (configs.length >= MAX_MODELS) {
-            // Silent limit check - no notification
+            showToast('最多配置5个模型');
             return;
         }
         
@@ -444,6 +444,37 @@ function showDeleteModelConfirm() {
         // Focus delete button
         deleteBtn.focus();
     });
+}
+
+// Show Toast (consistent with popup.js style)
+function showToast(message) {
+    // Remove existing toast
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    // Show toast immediately
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // Hide and remove toast after 1 second
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    }, 1000);
 }
 
 // Show Notification
