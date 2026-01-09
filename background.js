@@ -71,6 +71,9 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
+// Import model service
+importScripts('modelService.js');
+
 // 监听来自popup的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getVersion') {
@@ -79,8 +82,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.action === 'polishPrompt') {
-    // Handle AI polish prompt request
-    polishPromptWithAI(request.content, request.config)
+    // Handle AI polish prompt request using modelService
+    handlePolishPrompt(request.content, request.config)
       .then(polishedContent => {
         sendResponse({ success: true, polishedContent });
       })
@@ -91,8 +94,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   if (request.action === 'reversePrompt') {
-    // Handle AI reverse prompt request
-    reversePromptWithAI(request.content, request.config)
+    // Handle AI reverse prompt request using modelService
+    handleReversePrompt(request.content, request.config)
       .then(reversedPrompt => {
         sendResponse({ success: true, reversedPrompt });
       })
@@ -105,198 +108,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-// Reverse prompt with AI
-async function reversePromptWithAI(content, config) {
-  const { baseUrl, apiKey, modelName } = config;
+// Handle polish prompt using modelService
+async function handlePolishPrompt(content, config) {
+  console.log('[Background] Handling polish prompt with modelService');
   
-  console.log('[AI Reverse] Starting with config:', { baseUrl, modelName, apiKeyLength: apiKey?.length });
-  
-  if (!baseUrl || !apiKey || !modelName) {
-    throw new Error('模型配置不完整');
+  // Validate config
+  const validation = modelService.validateConfig(config);
+  if (!validation.valid) {
+    throw new Error(`配置验证失败: ${validation.message}`);
   }
   
   try {
-    // Prepare the API request
-    const endpoint = baseUrl.endsWith('/') ? baseUrl + 'chat/completions' : baseUrl + '/chat/completions';
-    console.log('[AI Reverse] Endpoint:', endpoint);
-    
-    const requestBody = {
-      model: modelName,
-      messages: [
-        {
-          role: 'system',
-          content: '你是一个提示词分析专家。你的任务是根据AI生成的内容，推测最可能产生这个输出的提示词。请分析用户可能的意图、格式要求和关键词，然后给出推测的完整提示词。直接给出提示词，不需要额外解释。'
-        },
-        {
-          role: 'user',
-          content: `请分析以下AI生成的内容，推测出最可能产生这个输出的提示词：\n\n${content}\n\n请直接给出推测的提示词，不需要其他解释。`
-        }
-      ],
-      temperature: 0.7,
-      stream: false
-    };
-    
-    console.log('[AI Reverse] Request body:', JSON.stringify(requestBody, null, 2));
-    
-    // Add timeout to fetch request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-    
-    try {
-      // Make API request
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      console.log('[AI Reverse] Response status:', response.status);
-      console.log('[AI Reverse] Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[AI Reverse] Error response:', errorText);
-        
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (e) {
-          errorData = { message: errorText };
-        }
-        
-        throw new Error(errorData.error?.message || errorData.message || `API请求失败: ${response.status} ${response.statusText}`);
-      }
-      
-      const responseText = await response.text();
-      console.log('[AI Reverse] Response text:', responseText);
-      
-      const data = JSON.parse(responseText);
-      console.log('[AI Reverse] Parsed response:', JSON.stringify(data, null, 2));
-      
-      // Extract reversed prompt from response
-      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-        const reversedPrompt = data.choices[0].message.content.trim();
-        console.log('[AI Reverse] Success! Reversed prompt length:', reversedPrompt.length);
-        return reversedPrompt;
-      } else {
-        console.error('[AI Reverse] Invalid response format:', data);
-        throw new Error('API返回格式错误');
-      }
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      
-      if (fetchError.name === 'AbortError') {
-        throw new Error('请求超时，请检查网络连接或稍后重试');
-      }
-      throw fetchError;
-    }
-    
+    const result = await modelService.polishPrompt(content, config);
+    console.log('[Background] Polish prompt success');
+    return result;
   } catch (error) {
-    console.error('[AI Reverse] Failed:', error);
+    console.error('[Background] Polish prompt failed:', error);
     throw error;
   }
 }
 
-// Polish prompt with AI
-async function polishPromptWithAI(content, config) {
-  const { baseUrl, apiKey, modelName } = config;
+// Handle reverse prompt using modelService
+async function handleReversePrompt(content, config) {
+  console.log('[Background] Handling reverse prompt with modelService');
   
-  console.log('[AI Polish] Starting with config:', { baseUrl, modelName, apiKeyLength: apiKey?.length });
-  
-  if (!baseUrl || !apiKey || !modelName) {
-    throw new Error('模型配置不完整');
+  // Validate config
+  const validation = modelService.validateConfig(config);
+  if (!validation.valid) {
+    throw new Error(`配置验证失败: ${validation.message}`);
   }
   
   try {
-    // Prepare the API request
-    const endpoint = baseUrl.endsWith('/') ? baseUrl + 'chat/completions' : baseUrl + '/chat/completions';
-    console.log('[AI Polish] Endpoint:', endpoint);
-    
-    const requestBody = {
-      model: modelName,
-      messages: [
-        {
-          role: 'system',
-          content: '你是一个专业的提示词优化助手。你的任务是优化用户提供的提示词，使其更加清晰、专业、有效。请保持原意的同时，改进措辞、结构和逻辑。'
-        },
-        {
-          role: 'user',
-          content: `请优化以下提示词，使其更加专业和有效：\n\n${content}`
-        }
-      ],
-      temperature: 0.7,
-      stream: false
-    };
-    
-    console.log('[AI Polish] Request body:', JSON.stringify(requestBody, null, 2));
-    
-    // Add timeout to fetch request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-    
-    try {
-      // Make API request
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      console.log('[AI Polish] Response status:', response.status);
-      console.log('[AI Polish] Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[AI Polish] Error response:', errorText);
-        
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (e) {
-          errorData = { message: errorText };
-        }
-        
-        throw new Error(errorData.error?.message || errorData.message || `API请求失败: ${response.status} ${response.statusText}`);
-      }
-      
-      const responseText = await response.text();
-      console.log('[AI Polish] Response text:', responseText);
-      
-      const data = JSON.parse(responseText);
-      console.log('[AI Polish] Parsed response:', JSON.stringify(data, null, 2));
-      
-      // Extract polished content from response
-      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-        const polishedContent = data.choices[0].message.content.trim();
-        console.log('[AI Polish] Success! Polished content length:', polishedContent.length);
-        return polishedContent;
-      } else {
-        console.error('[AI Polish] Invalid response format:', data);
-        throw new Error('API返回格式错误');
-      }
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      
-      if (fetchError.name === 'AbortError') {
-        throw new Error('请求超时，请检查网络连接或稍后重试');
-      }
-      throw fetchError;
-    }
-    
+    const result = await modelService.reversePrompt(content, config);
+    console.log('[Background] Reverse prompt success');
+    return result;
   } catch (error) {
-    console.error('[AI Polish] Failed:', error);
+    console.error('[Background] Reverse prompt failed:', error);
     throw error;
   }
 }

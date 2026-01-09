@@ -2224,20 +2224,6 @@ class PromptManager {
         reverseContent.appendChild(loadingOverlay);
         
         try {
-            // Prepare reverse prompt
-            const systemPrompt = `你是一个提示词分析专家。请根据以下AI生成的内容，推测最可能产生这个输出的提示词。
-
-请分析：
-1. 用户可能的意图是什么？
-2. 用户可能指定了哪些格式要求？
-3. 用户可能使用了哪些关键词？
-4. 推测完整的提示词是什么？
-
-请直接给出推测的提示词，不需要额外解释。提示词应该简洁明了，适合直接使用。
-
-需要分析的内容：
-${inputText}`;
-            
             // Send message to background script
             const response = await chrome.runtime.sendMessage({
                 action: 'reversePrompt',
@@ -2273,14 +2259,14 @@ ${inputText}`;
                 loadingOverlay.remove();
             }
             
-        // Restore button - completely reset all styles
-        reverseBtn.disabled = false;
-        reverseBtn.classList.remove('loading');
-        reverseBtn.innerHTML = '<img src="icons/reverse.png" class="save-btn-icon" alt="反推"><span>开始反推</span>';
-        reverseBtn.style.opacity = '';
-        reverseBtn.style.cursor = '';
-        // Force reflow to prevent transition glitches
-        reverseBtn.offsetHeight;
+            // Restore button - completely reset all styles
+            reverseBtn.disabled = false;
+            reverseBtn.classList.remove('loading');
+            reverseBtn.innerHTML = '<img src="icons/reverse.png" class="save-btn-icon" alt="反推"><span>开始反推</span>';
+            reverseBtn.style.opacity = '';
+            reverseBtn.style.cursor = '';
+            // Force reflow to prevent transition glitches
+            reverseBtn.offsetHeight;
         }
     }
 
