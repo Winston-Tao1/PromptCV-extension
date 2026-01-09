@@ -867,7 +867,7 @@ select.form-control {
 }
 
 textarea.form-control {
-    min-height: 160px;
+    min-height: 162px;
     resize: vertical;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     line-height: 1.6;
