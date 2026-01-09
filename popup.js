@@ -411,7 +411,11 @@ class PromptManager {
     // Initialize tag cloud buttons
     initTagCloudButtons() {
         const tagButtons = document.querySelectorAll('.tag-cloud-btn');
-        const selectedTags = [];
+        
+        // Initialize empty array if not already set
+        if (!this.selectedTags) {
+            this.selectedTags = [];
+        }
         
         tagButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -420,26 +424,26 @@ class PromptManager {
                 if (btn.classList.contains('selected')) {
                     // Deselect tag
                     btn.classList.remove('selected');
-                    const index = selectedTags.indexOf(tag);
+                    const index = this.selectedTags.indexOf(tag);
                     if (index > -1) {
-                        selectedTags.splice(index, 1);
+                        this.selectedTags.splice(index, 1);
                     }
                 } else {
                     // Check if already have 3 tags selected
-                    if (selectedTags.length >= 3) {
+                    if (this.selectedTags.length >= 3) {
                         this.showToast('最多只能选择3个标签');
                         return;
                     }
                     
                     // Select tag
                     btn.classList.add('selected');
-                    selectedTags.push(tag);
+                    this.selectedTags.push(tag);
                 }
+                
+                // CRITICAL: Save state immediately after tag selection changes
+                this.saveAddPageState();
             });
         });
-        
-        // Store reference for later use
-        this.selectedTags = selectedTags;
     }
 
     // Add new prompt
@@ -524,27 +528,62 @@ class PromptManager {
     // Restore add page state
     async restoreAddPageState() {
         try {
+            // ALWAYS initialize selectedTags as empty array first
+            this.selectedTags = [];
+            
+            // Clear any selected tags from UI first
+            document.querySelectorAll('.tag-cloud-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
             const result = await chrome.storage.local.get(['addPageState']);
-            if (result.addPageState) {
-                const promptContent = document.getElementById('prompt-content');
-                if (promptContent && result.addPageState.content) {
-                    promptContent.value = result.addPageState.content;
-                }
-                
-                // Restore selected tags
-                if (result.addPageState.tags && result.addPageState.tags.length > 0) {
-                    this.selectedTags = [...result.addPageState.tags];
-                    // Update UI to show selected tags
-                    document.querySelectorAll('.tag-cloud-btn').forEach(btn => {
-                        const tag = btn.getAttribute('data-tag');
-                        if (this.selectedTags.includes(tag)) {
-                            btn.classList.add('selected');
-                        }
-                    });
-                }
+            
+            // If no saved state exists, ensure everything is cleared and return
+            if (!result.addPageState) {
+                return;
+            }
+            
+            // Check if timestamp is recent (less than 2 minutes)
+            const isRecent = result.addPageState.timestamp && 
+                           (new Date() - new Date(result.addPageState.timestamp)) < 2 * 60 * 1000;
+            
+            // If state is stale, clear it and return
+            if (!isRecent) {
+                await this.clearAddPageState();
+                return;
+            }
+            
+            const promptContent = document.getElementById('prompt-content');
+            
+            // Restore content if exists
+            if (promptContent && result.addPageState.content) {
+                promptContent.value = result.addPageState.content;
+            }
+            
+            // FIX: Restore tags if they exist in saved state, regardless of content
+            // This ensures tags are cached even if user closes window after selecting tags but before typing content
+            const hasValidTags = result.addPageState.tags && 
+                               result.addPageState.tags.length > 0;
+            
+            if (hasValidTags) {
+                this.selectedTags = [...result.addPageState.tags];
+                // Update UI to show selected tags
+                document.querySelectorAll('.tag-cloud-btn').forEach(btn => {
+                    const tag = btn.getAttribute('data-tag');
+                    if (this.selectedTags.includes(tag)) {
+                        btn.classList.add('selected');
+                    }
+                });
             }
         } catch (error) {
             console.error('Failed to restore add page state:', error);
+            // On error, ensure selectedTags is empty and UI is cleared
+            this.selectedTags = [];
+            document.querySelectorAll('.tag-cloud-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            // Clear potentially corrupted state
+            await this.clearAddPageState();
         }
     }
     
