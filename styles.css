@@ -623,6 +623,21 @@ body {
 .card-time {
     font-size: 11px;
     color: var(--google-dark-gray);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.card-time-icon {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+}
+
+.copy-btn-icon {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
 }
 
 .copy-btn {

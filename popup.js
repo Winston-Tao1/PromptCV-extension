@@ -399,9 +399,13 @@ class PromptManager {
                     ${escapedPreview}
                 </div>
                 <div class="card-footer">
-                    <span class="card-time">📅 ${timeStr}</span>
+                    <span class="card-time">
+                        <img src="icons/date.png" alt="日期" class="card-time-icon">
+                        ${timeStr}
+                    </span>
                     <button class="copy-btn" data-action="copy">
-                        <span>📋</span> 复制
+                        <img src="icons/copy.png" alt="复制" class="copy-btn-icon">
+                        <span>复制</span>
                     </button>
                 </div>
             </div>
