@@ -1507,7 +1507,6 @@ class PromptManager {
             reader.readAsDataURL(file);
         });
         
-        this.showToast(`已添加 ${files.length} 个文件`);
         e.target.value = '';
     }
 
@@ -1607,7 +1606,6 @@ class PromptManager {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            this.showToast('文件下载成功');
         } catch (error) {
             console.error('Download file failed:', error);
             this.showToast('文件下载失败');
@@ -2306,7 +2304,10 @@ class PromptManager {
                 </div>
                 <textarea class="edit-modal-textarea" placeholder="反推的提示词...">${escapedContent}</textarea>
                 <div class="edit-modal-footer">
-                    <button class="edit-modal-save">💾 保存</button>
+                    <button class="edit-modal-save">
+                        <img src="icons/add.png" alt="保存" class="edit-modal-save-icon">
+                        <span>保存</span>
+                    </button>
                 </div>
             </div>
         `;

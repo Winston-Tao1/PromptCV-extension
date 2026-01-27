@@ -1297,6 +1297,15 @@ textarea.form-control {
     transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm);
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.edit-modal-save-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
 }
 
 .edit-modal-polish:disabled,
