@@ -25,10 +25,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Failed to record last page:', error);
     }
     
+    // Migrate any existing plaintext API keys to encrypted format
+    await migrateExistingConfigs();
+    
     loadModels();
     setupEventListeners();
     restoreSettingsPageState();
 });
+
+/**
+ * 迁移现有明文 API Key 到加密格式
+ * 首次运行或检测到未加密配置时自动执行
+ */
+async function migrateExistingConfigs() {
+    try {
+        const result = await chrome.storage.local.get([STORAGE_KEY]);
+        const configs = result[STORAGE_KEY] || [];
+        
+        if (configs.length === 0) return;
+        
+        const { migrated, needsUpdate } = await cryptoService.migrateConfigs(configs);
+        
+        if (needsUpdate) {
+            await chrome.storage.local.set({ [STORAGE_KEY]: migrated });
+        }
+    } catch (error) {
+        console.error('Failed to migrate configs:', error);
+    }
+}
 
 // Load logo from storage
 async function loadLogo() {
@@ -207,13 +231,14 @@ function renderModels(configs) {
     });
 }
 
-// Create Model Card
+// Create Model Card (handles both encrypted and legacy configs)
 function createModelCard(config, index) {
     const card = document.createElement('div');
     card.className = `model-card ${config.active ? 'active' : ''}`;
     
     const displayName = config.name || `模型 ${index + 1}`;
-    const maskedApiKey = maskApiKey(config.apiKey);
+    // For encrypted configs, show fixed mask; for legacy plaintext, show partial mask
+    const maskedApiKey = maskApiKey(config);
     
     card.innerHTML = `
         <div class="model-card-header">
@@ -256,15 +281,21 @@ function createModelCard(config, index) {
     return card;
 }
 
-// Mask API Key
-function maskApiKey(apiKey) {
+// Mask API Key (handles both encrypted and legacy plaintext configs)
+function maskApiKey(config) {
+    // Encrypted configs: show fully masked key
+    if (cryptoService.isEncrypted(config)) {
+        return '****(已加密)';
+    }
+    // Legacy plaintext configs
+    const apiKey = config.apiKey;
     if (!apiKey || apiKey.length < 8) {
         return '****';
     }
     return apiKey.substring(0, 4) + '****' + apiKey.substring(apiKey.length - 4);
 }
 
-// Handle Save Config
+// Handle Save Config (with encryption)
 async function handleSaveConfig(e) {
     e.preventDefault();
     
@@ -288,11 +319,19 @@ async function handleSaveConfig(e) {
             return;
         }
         
-        // Add new config (inactive by default)
+        // Encrypt API key before storing
+        const encryptionData = await cryptoService.encryptApiKey(apiKey);
+        
+        // Add new config (inactive by default, apiKey encrypted)
         const newConfig = {
             id: Date.now().toString(),
             baseUrl,
-            apiKey,
+            encryptedKey: encryptionData.encryptedKey,
+            iv: encryptionData.iv,
+            salt: encryptionData.salt,
+            algorithm: encryptionData.algorithm,
+            iterations: encryptionData.iterations,
+            keyLength: encryptionData.keyLength,
             modelName,
             name: configName || `模型 ${configs.length + 1}`,
             active: false,

@@ -71,8 +71,9 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-// Import model service
+// Import services
 importScripts('modelService.js');
+importScripts('cryptoService.js');
 
 // 监听来自popup的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -108,18 +109,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
+// Decrypt API key from config and return a config with plaintext apiKey for modelService
+async function prepareConfig(config) {
+  const apiKey = await cryptoService.getApiKey(config);
+  if (!apiKey) {
+    throw new Error('无法获取 API Key');
+  }
+  return {
+    ...config,
+    apiKey: apiKey
+  };
+}
+
 // Handle polish prompt using modelService
 async function handlePolishPrompt(content, config) {
   console.log('[Background] Handling polish prompt with modelService');
   
-  // Validate config
-  const validation = modelService.validateConfig(config);
-  if (!validation.valid) {
-    throw new Error(`配置验证失败: ${validation.message}`);
-  }
-  
   try {
-    const result = await modelService.polishPrompt(content, config);
+    // Decrypt API key before using
+    const decryptedConfig = await prepareConfig(config);
+    
+    // Validate config
+    const validation = modelService.validateConfig(decryptedConfig);
+    if (!validation.valid) {
+      throw new Error(`配置验证失败: ${validation.message}`);
+    }
+    
+    const result = await modelService.polishPrompt(content, decryptedConfig);
     console.log('[Background] Polish prompt success');
     return result;
   } catch (error) {
@@ -132,14 +148,17 @@ async function handlePolishPrompt(content, config) {
 async function handleReversePrompt(content, config) {
   console.log('[Background] Handling reverse prompt with modelService');
   
-  // Validate config
-  const validation = modelService.validateConfig(config);
-  if (!validation.valid) {
-    throw new Error(`配置验证失败: ${validation.message}`);
-  }
-  
   try {
-    const result = await modelService.reversePrompt(content, config);
+    // Decrypt API key before using
+    const decryptedConfig = await prepareConfig(config);
+    
+    // Validate config
+    const validation = modelService.validateConfig(decryptedConfig);
+    if (!validation.valid) {
+      throw new Error(`配置验证失败: ${validation.message}`);
+    }
+    
+    const result = await modelService.reversePrompt(content, decryptedConfig);
     console.log('[Background] Reverse prompt success');
     return result;
   } catch (error) {

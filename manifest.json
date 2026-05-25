@@ -31,7 +31,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["delete_confirm_modal.html", "delete_confirm_modal.js", "styles.css", "modelService.js"],
+      "resources": ["delete_confirm_modal.html", "delete_confirm_modal.js", "styles.css", "modelService.js", "cryptoService.js"],
       "matches": ["<all_urls>"]
     }
   ]
