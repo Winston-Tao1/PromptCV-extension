@@ -30,7 +30,7 @@
 
 ## 🎬 演示视频
 
-https://github.com/user-attachments/assets/983e6028-2409-4b10-bff0-5cc614b04d0c
+<video src="https://github.com/user-attachments/assets/983e6028-2409-4b10-bff0-5cc614b04d0c" controls width="100%"></video>
 
 ---
 
