@@ -28,6 +28,12 @@
 
 ---
 
+## 🎬 演示视频
+
+https://github.com/user-attachments/assets/983e6028-2409-4b10-bff0-5cc614b04d0c
+
+---
+
 ## 🚀 快速开始
 
 ### 安装步骤
@@ -248,6 +254,7 @@ A: 没有限制，支持任意大小的图片文件。
 
 ## 📧 联系方式
 
+- **Email**: [taowenlongit@outlook.com](mailto:taowenlongit@outlook.com)
 - **GitHub**: [@Winston-Tao1](https://github.com/Winston-Tao1)
 - **项目地址**: [Prompt Extension](https://github.com/Winston-Tao1/Prompt-extension)
 - **问题反馈**: [GitHub Issues](https://github.com/Winston-Tao1/Prompt-extension/issues)
