@@ -30,7 +30,7 @@
 
 ## 🎬 演示视频
 
-<video src="https://github.com/user-attachments/assets/983e6028-2409-4b10-bff0-5cc614b04d0c" controls width="100%"></video>
+[![Prompt 演示视频](https://img.youtube.com/vi/008PjXJIFxg/maxresdefault.jpg)](https://www.youtube.com/watch?v=008PjXJIFxg)
 
 ---
 
@@ -62,7 +62,7 @@
 - 🏷️ **标签分类** - 12 种预设标签，最多选择 3 个
 - ✏️ **在线编辑** - 点击卡片即可编辑，自动保存
 - 🗑️ **安全删除** - 确认弹窗防止误删
-- 📊 **自动排序** - 按时间倒序显示最近 20 条
+- � **自动排序** - 按时间倒序显示最近 20 条
 
 **支持标签：** 代码编程、内容创作、学习研究、工作办公、生活娱乐、专业领域、DeepSeek、ChatGPT、Grok、Gemini、豆包、Claude
 
